@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ExpenseGuard — Budgets</title>
+    <link rel="stylesheet" href="../css/style.css?v=3" />
+    <link rel="stylesheet" href="../css/evaluation.css?v=3" />
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="logo">Expense<span>Guard</span></div>
+        <div class="menu-title">MAIN MENU</div>
+        <a href="../dashboard.html" class="nav-item"
+          ><span class="nav-icon">⌂</span><span>Dashboard</span></a
+        ><a href="transactions.html" class="nav-item"
+          ><span class="nav-icon">₹</span><span>Transactions</span></a
+        ><a href="anomalies.html" class="nav-item"
+          ><span class="nav-icon">⚠</span><span>Anomalies</span></a
+        ><a href="categories.html" class="nav-item"
+          ><span class="nav-icon">▣</span><span>Categories</span></a
+        ><a href="reports.html" class="nav-item"
+          ><span class="nav-icon">▤</span><span>Reports</span></a
+        >
+        <div class="menu-title">TOOLS</div>
+        <a href="budgets.html" class="nav-item active"
+          ><span class="nav-icon">◫</span><span>Budgets</span></a
+        >
+        <div class="menu-title">SETTINGS</div>
+        <a href="settings.html" class="nav-item"
+          ><span class="nav-icon">⚙</span><span>Settings</span></a
+        >
+      </aside>
+      <main class="main">
+        <header class="header">
+          <div>
+            <div class="eyebrow">SPENDING LIMITS</div>
+            <h1>Budgets</h1>
+            <p>Set category limits and keep your spending under control.</p>
+          </div>
+        </header>
+        <section class="card" style="margin-bottom: 16px">
+          <div class="card-header">
+            <div>
+              <h2>Create a budget</h2>
+              <p>Budgets are saved locally in your browser.</p>
+            </div>
+          </div>
+          <div class="settings-form-grid">
+            <div class="settings-field">
+              <label>CATEGORY</label
+              ><select id="budgetCategory">
+                <option>Food</option>
+                <option>Transport</option>
+                <option>Shopping</option>
+                <option>Bills</option>
+                <option>Entertainment</option>
+                <option>Utilities</option>
+                <option>Healthcare</option>
+                <option>Education</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="settings-field">
+              <label>MONTHLY LIMIT</label
+              ><input
+                id="budgetAmount"
+                type="number"
+                min="1"
+                placeholder="e.g. 5000"
+              />
+            </div>
+          </div>
+          <div class="settings-actions">
+            <button
+              class="add-btn"
+              id="saveBudget"
+              style="width: auto; padding: 10px 16px"
+            >
+              ＋ Save budget
+            </button>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Budget health</h2>
+              <p>Current spending compared with your limits.</p>
+            </div>
+          </div>
+          <div id="budgetList"></div>
+        </section>
+      </main>
+    </div>
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+    <script src="../javascript/app.js"></script>
+    <script src="../javascript/budgets.js" defer></script>
+  </body>
+</html>
