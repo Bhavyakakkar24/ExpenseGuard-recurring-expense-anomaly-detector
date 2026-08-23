@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExpenseGuard — Settings</title>
+    <link rel="stylesheet" href="../css/style.css?v=3" />
+    <link rel="stylesheet" href="../css/evaluation.css?v=3" />
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="logo">Expense<span>Guard</span></div>
+        <div class="menu-title">MAIN MENU</div>
+        <a href="../dashboard.html" class="nav-item"
+          ><span class="nav-icon">⌂</span><span>Dashboard</span></a
+        >
+        <a href="transactions.html" class="nav-item"
+          ><span class="nav-icon">₹</span><span>Transactions</span></a
+        >
+        <a href="anomalies.html" class="nav-item"
+          ><span class="nav-icon">⚠</span><span>Anomalies</span></a
+        >
+        <a href="categories.html" class="nav-item"
+          ><span class="nav-icon">▣</span><span>Categories</span></a
+        ><a href="reports.html" class="nav-item"
+          ><span class="nav-icon">▤</span><span>Reports</span></a
+        >
+        <div class="menu-title">TOOLS</div>
+        <a href="budgets.html" class="nav-item"
+          ><span class="nav-icon">◫</span><span>Budgets</span></a
+        >
+        <div class="menu-title">SETTINGS</div>
+        <a href="settings.html" class="nav-item active"
+          ><span class="nav-icon">⚙</span><span>Settings</span></a
+        >
+      </aside>
+
+      <main class="main">
+        <header class="header">
+          <div>
+            <div class="eyebrow">CONTROL CENTER</div>
+            <h1>Settings</h1>
+            <p>
+              Manage your account, preferences, alerts and local ExpenseGuard
+              data.
+            </p>
+          </div>
+          <div class="settings-status" id="saveStatus">All changes saved</div>
+        </header>
+
+        <div class="settings-shell">
+          <nav class="settings-nav" aria-label="Settings sections">
+            <div class="settings-nav-label">SETTINGS</div>
+            <button class="active" data-panel="account">
+              👤 &nbsp; Account
+            </button>
+            <button data-panel="preferences">⚙ &nbsp; Preferences</button>
+            <button data-panel="notifications">🔔 &nbsp; Notifications</button>
+            <button data-panel="security">🛡 &nbsp; Security & Data</button>
+            <div class="settings-nav-label">PROJECT</div>
+            <button data-panel="evaluation">⌘ &nbsp; Evaluation Lab</button>
+          </nav>
+
+          <div>
+            <!-- ACCOUNT -->
+            <section class="settings-panel active" id="panel-account">
+              <div class="settings-section">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>Account profile</h2>
+                    <p>
+                      Keep the information shown across your ExpenseGuard
+                      dashboard up to date.
+                    </p>
+                  </div>
+                  <span class="settings-badge">PROFILE</span>
+                </div>
+                <div class="settings-form-grid">
+                  <div class="settings-field">
+                    <label>FULL NAME</label
+                    ><input id="setName" type="text" placeholder="Your name" />
+                  </div>
+                  <div class="settings-field">
+                    <label>EMAIL</label
+                    ><input
+                      id="setEmail"
+                      type="email"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  <div class="settings-field">
+                    <label>DEFAULT CURRENCY</label
+                    ><select id="setCurrency">
+                      <option value="INR">₹ INR — Indian Rupee</option>
+                      <option value="USD">$ USD — US Dollar</option>
+                      <option value="EUR">€ EUR — Euro</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label>ROLE</label
+                    ><input value="Personal Expense Manager" disabled />
+                  </div>
+                </div>
+                <div class="settings-actions">
+                  <button class="btn-secondary" id="resetAccount">Reset</button
+                  ><button
+                    class="add-btn"
+                    style="width: auto; padding: 10px 17px"
+                    id="saveAccount"
+                  >
+                    Save profile
+                  </button>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>Profile visibility</h2>
+                    <p>Choose what is displayed in your dashboard header.</p>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">
+                      Show your name in dashboard
+                    </div>
+                    <div class="settings-row-sub">
+                      Displays your saved name beside the avatar.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button
+                      class="switch on"
+                      data-key="showName"
+                      aria-label="Show name"
+                    ></button>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">
+                      Show account email in profile menu
+                    </div>
+                    <div class="settings-row-sub">
+                      Keeps your email visible only in the local profile
+                      dropdown.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button
+                      class="switch on"
+                      data-key="showEmail"
+                      aria-label="Show email"
+                    ></button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- PREFERENCES -->
+            <section class="settings-panel" id="panel-preferences">
+              <div class="settings-section">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>Appearance</h2>
+                    <p>
+                      Customize the look and feel of ExpenseGuard across your
+                      devices.
+                    </p>
+                  </div>
+                  <span class="settings-badge" id="themeBadge"
+                    >NAVY + INDIGO + TEAL</span
+                  >
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">Interface theme</div>
+                    <div class="settings-row-sub">
+                      Switch between modern Navy dark mode and clean Light mode.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <div class="segmented" id="themeSegmented">
+                      <button type="button" data-theme="navy">Navy</button
+                      ><button type="button" data-theme="light">Light</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">Motion effects</div>
+                    <div class="settings-row-sub">
+                      Small hover and page transitions for a smoother interface.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button
+                      class="switch on"
+                      data-key="motion"
+                      aria-label="Motion effects"
+                    ></button>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">Compact cards</div>
+                    <div class="settings-row-sub">
+                      Use tighter spacing for dense transaction lists.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button
+                      class="switch"
+                      data-key="compact"
+                      aria-label="Compact cards"
+                    ></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>Expense defaults</h2>
+                    <p>Set the values used when you add a new transaction.</p>
+                  </div>
+                </div>
+                <div class="settings-form-grid">
+                  <div class="settings-field">
+                    <label>DEFAULT CATEGORY</label
+                    ><select id="defaultCategory">
+                      <option>Food</option>
+                      <option>Transport</option>
+                      <option>Shopping</option>
+                      <option>Bills</option>
+                      <option>Entertainment</option>
+                      <option>Utilities</option>
+                      <option>Healthcare</option>
+                      <option>Education</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label>WEEK STARTS ON</label
+                    ><select id="weekStart">
+                      <option value="monday">Monday</option>
+                      <option value="sunday">Sunday</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="settings-actions">
+                  <button
+                    class="add-btn"
+                    style="width: auto; padding: 10px 17px"
+                    id="savePrefs"
+                  >
+                    Save preferences
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- NOTIFICATIONS -->
+            <section class="settings-panel" id="panel-notifications">
+              <div class="settings-section">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>Alerts & insights</h2>
+                    <p>
+                      Choose which local notifications ExpenseGuard should show
+                      while you use the app.
+                    </p>
+                  </div>
+                  <span class="settings-badge">LOCAL ONLY</span>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">Anomaly alerts</div>
+                    <div class="settings-row-sub">
+                      Show a warning when a transaction crosses the anomaly
+                      threshold.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button
+                      class="switch on"
+                      data-key="anomalyAlerts"
+                      aria-label="Anomaly alerts"
+                    ></button>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">
+                      Smart spending insights
+                    </div>
+                    <div class="settings-row-sub">
+                      Show small recommendations based on your stored
+                      transactions.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button
+                      class="switch on"
+                      data-key="insights"
+                      aria-label="Insights"
+                    ></button>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">Delete confirmation</div>
+                    <div class="settings-row-sub">
+                      Ask before deleting a transaction.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button
+                      class="switch on"
+                      data-key="confirmDelete"
+                      aria-label="Delete confirmation"
+                    ></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>Notification preview</h2>
+                    <p>Test how an ExpenseGuard alert will look.</p>
+                  </div>
+                </div>
+                <div class="security-item">
+                  <div class="security-icon">⚠</div>
+                  <div>
+                    <strong>Unusual expense detected</strong
+                    ><span
+                      >Your ₹5,000 Food transaction is higher than your usual
+                      category spending.</span
+                    >
+                  </div>
+                  <button class="btn-secondary" id="testAlert">Test</button>
+                </div>
+              </div>
+            </section>
+
+            <!-- SECURITY & DATA -->
+            <section class="settings-panel" id="panel-security">
+              <div class="settings-section">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>Security & privacy</h2>
+                    <p>
+                      This student project stores its data locally in your
+                      browser. No server is required for the evaluation build.
+                    </p>
+                  </div>
+                  <span class="settings-badge">BROWSER STORAGE</span>
+                </div>
+                <div class="security-item">
+                  <div class="security-icon">🔒</div>
+                  <div>
+                    <strong>LocalStorage</strong
+                    ><span
+                      >Transactions, preferences and demo data are saved on this
+                      browser.</span
+                    >
+                  </div>
+                </div>
+                <div class="security-item">
+                  <div class="security-icon">◉</div>
+                  <div>
+                    <strong>SessionStorage</strong
+                    ><span
+                      >Temporary session information is available only for the
+                      current browser session.</span
+                    >
+                  </div>
+                </div>
+                <div class="security-item">
+                  <div class="security-icon">✓</div>
+                  <div>
+                    <strong>Data control</strong
+                    ><span
+                      >You can export or remove your local transaction data at
+                      any time.</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>Data management</h2>
+                    <p>
+                      Back up your transactions or reset the local demo data.
+                    </p>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">Export transactions</div>
+                    <div class="settings-row-sub">
+                      Download your saved transactions as a CSV file.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button class="btn-secondary" id="exportData">
+                      ↓ Export CSV
+                    </button>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">Load sample data</div>
+                    <div class="settings-row-sub">
+                      Useful for demonstrating charts, filters and anomaly
+                      detection.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button
+                      class="add-btn"
+                      style="width: auto; padding: 9px 13px"
+                      id="loadDemo"
+                    >
+                      ＋ Load demo
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-section danger-zone">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>Danger zone</h2>
+                    <p>
+                      These actions permanently change locally stored project
+                      data.
+                    </p>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">Clear all transactions</div>
+                    <div class="settings-row-sub">
+                      Remove every locally saved expense from this browser.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button class="btn-danger" id="clearData">
+                      Clear data
+                    </button>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="settings-row-title">Sign out</div>
+                    <div class="settings-row-sub">
+                      End the current local ExpenseGuard session.
+                    </div>
+                  </div>
+                  <div class="settings-control">
+                    <button class="btn-secondary" id="signOut">Sign out</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- EVALUATION LAB -->
+            <section class="settings-panel" id="panel-evaluation">
+              <div class="settings-section">
+                <div class="settings-section-head">
+                  <div>
+                    <h2>First Evaluation JavaScript Lab</h2>
+                    <p>
+                      Real project concepts used inside ExpenseGuard — kept here
+                      as a clean demonstration area for your viva/evaluation.
+                    </p>
+                  </div>
+                  <span class="settings-badge">SYLLABUS</span>
+                </div>
+                <div class="eval-chips">
+                  <span class="eval-chip">var / let / const</span
+                  ><span class="eval-chip">Data Types</span
+                  ><span class="eval-chip">Type Conversion</span
+                  ><span class="eval-chip">Operators</span
+                  ><span class="eval-chip">if / else</span
+                  ><span class="eval-chip">Loops</span
+                  ><span class="eval-chip">Functions</span
+                  ><span class="eval-chip">Arrow Functions</span
+                  ><span class="eval-chip">Arrays</span
+                  ><span class="eval-chip">push / splice / slice</span
+                  ><span class="eval-chip">forEach</span
+                  ><span class="eval-chip">map</span
+                  ><span class="eval-chip">filter</span
+                  ><span class="eval-chip">reduce</span
+                  ><span class="eval-chip">sort</span
+                  ><span class="eval-chip">Objects</span
+                  ><span class="eval-chip">JSON</span
+                  ><span class="eval-chip">DOM</span
+                  ><span class="eval-chip">Events</span
+                  ><span class="eval-chip">Validation</span
+                  ><span class="eval-chip">preventDefault</span
+                  ><span class="eval-chip">LocalStorage</span
+                  ><span class="eval-chip">SessionStorage</span
+                  ><span class="eval-chip">Template Literals</span
+                  ><span class="eval-chip">Spread / Rest</span
+                  ><span class="eval-chip">Default Parameters</span>
+                </div>
+                <div class="eval-lab">
+                  <div
+                    class="settings-section-head"
+                    style="margin-bottom: 10px"
+                  >
+                    <div>
+                      <h2 style="font-size: 13px">Live calculation</h2>
+                      <p>
+                        Uses the saved transaction array with functions,
+                        map/filter/reduce, operators and template literals.
+                      </p>
+                    </div>
+                    <button
+                      class="add-btn"
+                      id="runLab"
+                      style="width: auto; padding: 9px 13px"
+                    >
+                      Run lab
+                    </button>
+                  </div>
+                  <div id="labOutput" class="empty-state" style="padding: 20px">
+                    <strong>Ready</strong>
+                    <p>
+                      Run the lab to calculate your current spending statistics.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="../javascript/app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof rememberLastPage === "function")
+          rememberLastPage("settings");
+
+        const currentUser =
+          typeof getCurrentUser === "function" ? getCurrentUser() : null;
+        const name =
+          currentUser?.name ||
+          localStorage.getItem("expenseGuardSetting_name") ||
+          "Muskan Kapahi";
+        const email =
+          currentUser?.email ||
+          localStorage.getItem("expenseGuardSetting_email") ||
+          "";
+        document.getElementById("setName").value = name;
+        document.getElementById("setEmail").value = email;
+        document.getElementById("setCurrency").value =
+          localStorage.getItem("expenseGuardSetting_currency") || "INR";
+        document.getElementById("defaultCategory").value =
+          localStorage.getItem("expenseGuardSetting_category") || "Food";
+        document.getElementById("weekStart").value =
+          localStorage.getItem("expenseGuardSetting_week") || "monday";
+
+        document
+          .querySelectorAll(".settings-nav button[data-panel]")
+          .forEach((btn) => {
+            btn.addEventListener("click", () => {
+              document
+                .querySelectorAll(".settings-nav button[data-panel]")
+                .forEach((b) => b.classList.remove("active"));
+              document
+                .querySelectorAll(".settings-panel")
+                .forEach((p) => p.classList.remove("active"));
+              btn.classList.add("active");
+              document
+                .getElementById("panel-" + btn.dataset.panel)
+                .classList.add("active");
+            });
+          });
+
+        const status = document.getElementById("saveStatus");
+        function saved(message = "All changes saved") {
+          status.textContent = message;
+          status.style.color = "#65e1a0";
+          setTimeout(() => (status.textContent = "All changes saved"), 1800);
+          if (typeof toast === "function") toast(message);
+        }
+
+        document.querySelectorAll(".switch[data-key]").forEach((btn) => {
+          const key = "expenseGuardSetting_" + btn.dataset.key;
+          btn.classList.toggle("on", localStorage.getItem(key) !== "false");
+          btn.addEventListener("click", () => {
+            btn.classList.toggle("on");
+            localStorage.setItem(key, String(btn.classList.contains("on")));
+            saved("Preference updated");
+          });
+        });
+
+        const currentTheme =
+          (typeof getTheme === "function"
+            ? getTheme()
+            : localStorage.getItem("expenseGuardTheme")) || "navy";
+        const themeBadge = document.getElementById("themeBadge");
+        function updateThemeUI(t) {
+          document.querySelectorAll("#themeSegmented button").forEach((b) => {
+            b.classList.toggle("active", b.dataset.theme === t);
+          });
+          if (themeBadge)
+            themeBadge.textContent =
+              t === "light" ? "LIGHT + INDIGO + TEAL" : "NAVY + INDIGO + TEAL";
+        }
+        updateThemeUI(currentTheme);
+        document.querySelectorAll("#themeSegmented button").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const selected = btn.dataset.theme;
+            localStorage.setItem("expenseGuardTheme", selected);
+            if (typeof applyTheme === "function") applyTheme(selected);
+            updateThemeUI(selected);
+            saved(
+              "Theme changed to " + (selected === "light" ? "Light" : "Navy"),
+            );
+          });
+        });
+
+        document.getElementById("saveAccount").onclick = () => {
+          const n =
+            document.getElementById("setName").value.trim() || "Muskan Kapahi";
+          const e = document.getElementById("setEmail").value.trim();
+          localStorage.setItem("expenseGuardSetting_name", n);
+          localStorage.setItem("expenseGuardSetting_email", e);
+          localStorage.setItem(
+            "expenseGuardSetting_currency",
+            document.getElementById("setCurrency").value,
+          );
+          const users = typeof getUsers === "function" ? getUsers() : [];
+          const u =
+            typeof getCurrentUser === "function" ? getCurrentUser() : null;
+          if (u && Array.isArray(users)) {
+            const idx = users.findIndex((x) => x.email === u.email);
+            if (idx >= 0) {
+              users[idx] = {
+                ...users[idx],
+                name: n,
+                email: e || users[idx].email,
+              };
+              localStorage.setItem("expenseGuardUsers", JSON.stringify(users));
+              localStorage.setItem(
+                "expenseGuardCurrentUser",
+                JSON.stringify(users[idx]),
+              );
+            }
+          }
+          saved("Profile saved");
+        };
+        document.getElementById("resetAccount").onclick = () => {
+          document.getElementById("setName").value = name;
+          document.getElementById("setEmail").value = email;
+          document.getElementById("setCurrency").value = "INR";
+          saved("Profile reset");
+        };
+        document.getElementById("savePrefs").onclick = () => {
+          localStorage.setItem(
+            "expenseGuardSetting_category",
+            document.getElementById("defaultCategory").value,
+          );
+          localStorage.setItem(
+            "expenseGuardSetting_week",
+            document.getElementById("weekStart").value,
+          );
+          saved("Preferences saved");
+        };
+        document.getElementById("testAlert").onclick = () => {
+          if (typeof toast === "function") toast("⚠ Anomaly alert preview");
+        };
+
+        document.getElementById("exportData").onclick = () => {
+          const rows =
+            typeof getTransactions === "function" ? getTransactions() : [];
+          if (!rows.length) {
+            if (typeof toast === "function") toast("No transactions to export");
+            return;
+          }
+          const headers = [
+            "Date",
+            "Description",
+            "Category",
+            "Amount",
+            "Z-Score",
+            "Anomaly",
+          ];
+          const lines = [
+            headers.join(","),
+            ...rows.map((t) =>
+              [
+                t.date,
+                t.description,
+                t.category,
+                t.amount,
+                t.zScore || 0,
+                t.isAnomaly ? "Yes" : "No",
+              ]
+                .map((v) => `"${String(v ?? "").replaceAll('"', '""')}"`)
+                .join(","),
+            ),
+          ];
+          const blob = new Blob([lines.join("\n")], {
+            type: "text/csv;charset=utf-8",
+          });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "expenseguard-transactions.csv";
+          a.click();
+          URL.revokeObjectURL(a.href);
+          saved("CSV exported");
+        };
+
+        document.getElementById("loadDemo").onclick = () => {
+          const data = [
+            ["Food", "Zomato", 450],
+            ["Transport", "Uber", 280],
+            ["Shopping", "Amazon", 2499],
+            ["Bills", "Electricity", 1560],
+            ["Entertainment", "Netflix", 649],
+            ["Food", "Cafe", 520],
+            ["Transport", "Metro", 180],
+            ["Healthcare", "Pharmacy", 720],
+            ["Education", "Course Material", 1200],
+            ["Food", "Weekend Dinner", 5000],
+          ];
+          const now = new Date();
+          const demo = data.map((x, i) => ({
+            id: Date.now() + i,
+            date: new Date(now.getTime() - i * 86400000)
+              .toISOString()
+              .slice(0, 10),
+            category: x[0],
+            description: x[1],
+            amount: x[2],
+          }));
+          if (typeof saveTransactions === "function") saveTransactions(demo);
+          saved("Demo data loaded");
+          setTimeout(() => (location.href = "../dashboard.html"), 650);
+        };
+
+        document.getElementById("clearData").onclick = () => {
+          if (
+            confirm("Delete all saved transactions? This cannot be undone.")
+          ) {
+            if (typeof saveTransactions === "function") saveTransactions([]);
+            saved("All transactions cleared");
+          }
+        };
+
+        document.getElementById("signOut").onclick = () => {
+          localStorage.removeItem("expenseGuardLoggedIn");
+          localStorage.removeItem("expenseGuardCurrentUser");
+          sessionStorage.clear();
+          location.href = "signin.html";
+        };
+
+        document.getElementById("runLab").onclick = () => {
+          const tx =
+            typeof getTransactions === "function" ? getTransactions() : [];
+          const amounts = tx.map((t) => Number(t.amount) || 0);
+          const total = amounts.reduce((sum, n) => sum + n, 0);
+          const highest = amounts.length ? Math.max(...amounts) : 0;
+          const flagged = tx.filter((t) => t.isAnomaly).length;
+          const categories = [...new Set(tx.map((t) => t.category))].sort();
+          let loops = 0;
+          for (let i = 0; i < tx.length; i++) {
+            loops++;
+          }
+          const average = amounts.length ? total / amounts.length : 0;
+          document.getElementById("labOutput").className = "eval-lab";
+          document.getElementById("labOutput").innerHTML =
+            `<strong style="color:#eef6ff">JavaScript lab complete ✓</strong><p style="color:#91a6bf;margin:7px 0 0">map() processed ${amounts.length} amounts · reduce() total ₹${total.toLocaleString("en-IN")} · filter() found ${flagged} anomalies · sort() found ${categories.length} categories · for loop iterated ${loops} records · average ₹${average.toFixed(2)} · highest ₹${highest.toLocaleString("en-IN")}</p>`;
+          saved("Evaluation lab executed");
+        };
+      });
+      function toast(m) {
+        const t = document.createElement("div");
+        t.className = "toast";
+        t.textContent = m;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2200);
+      }
+    </script>
+  </body>
+</html>

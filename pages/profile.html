@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Profile - ExpenseGuard</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/evaluation.css" />
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="logo">Expense<span>Guard</span></div>
+        <div class="menu-title">MAIN MENU</div>
+        <a href="../dashboard.html" class="nav-item"
+          ><span class="nav-icon">⌂</span><span>Dashboard</span></a
+        ><a href="transactions.html" class="nav-item"
+          ><span class="nav-icon">₹</span><span>Transactions</span></a
+        ><a href="anomalies.html" class="nav-item"
+          ><span class="nav-icon">⚠</span><span>Anomalies</span></a
+        ><a href="categories.html" class="nav-item"
+          ><span class="nav-icon">▣</span><span>Categories</span></a
+        ><a href="reports.html" class="nav-item"
+          ><span class="nav-icon">▤</span><span>Reports</span></a
+        >
+        <div class="menu-title">TOOLS</div>
+        <a href="budgets.html" class="nav-item"
+          ><span class="nav-icon">◫</span><span>Budgets</span></a
+        >
+        <div class="menu-title">SETTINGS</div>
+        <a href="settings.html" class="nav-item"
+          ><span class="nav-icon">⚙</span><span>Settings</span></a
+        >
+      </aside>
+      <main class="main">
+        <header class="header">
+          <div>
+            <div class="eyebrow">YOUR ACCOUNT</div>
+            <h1>My Profile</h1>
+            <p>Manage your personal ExpenseGuard information.</p>
+          </div>
+        </header>
+        <div class="profile-grid">
+          <section class="card">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 24px;
+              "
+            >
+              <div
+                class="profile-circle"
+                id="bigInitials"
+                style="width: 64px; height: 64px; font-size: 20px"
+              >
+                EG
+              </div>
+              <div>
+                <h2 id="profileTitle">My Account</h2>
+                <p id="profileEmail" style="color: var(--muted)">
+                  Not signed in
+                </p>
+              </div>
+            </div>
+            <form id="profileForm">
+              <div class="form-group" style="margin-bottom: 15px">
+                <label>FULL NAME</label><input id="profileNameInput" required />
+              </div>
+              <div class="form-group" style="margin-bottom: 15px">
+                <label>EMAIL ADDRESS</label
+                ><input id="profileEmailInput" type="email" required />
+              </div>
+              <button class="add-btn" style="width: 100%">Save Profile</button>
+            </form>
+          </section>
+          <section class="card">
+            <div class="card-header">
+              <div>
+                <h2>Account summary</h2>
+                <p>Live information from your browser storage.</p>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <strong>Total transactions</strong>
+                <p style="color: var(--muted); font-size: 12px">
+                  Saved locally
+                </p>
+              </div>
+              <strong id="profileCount">0</strong>
+            </div>
+            <div class="setting-row">
+              <div>
+                <strong>Total spending</strong>
+                <p style="color: var(--muted); font-size: 12px">
+                  All recorded expenses
+                </p>
+              </div>
+              <strong id="profileSpend">₹0</strong>
+            </div>
+            <div class="setting-row">
+              <div>
+                <strong>Storage</strong>
+                <p style="color: var(--muted); font-size: 12px">
+                  Browser LocalStorage
+                </p>
+              </div>
+              <span
+                class="status-badge"
+                style="background: #e9fbf3; color: #15966a; padding: 6px 10px"
+                >Active</span
+              >
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="../javascript/app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        let user = getCurrentUser() || {
+          name: "My Account",
+          email: "Not signed in",
+        };
+        const n = document.getElementById("profileNameInput"),
+          e = document.getElementById("profileEmailInput");
+        n.value = user.name || "";
+        e.value = user.email || "";
+        function paint() {
+          document.getElementById("profileTitle").textContent =
+            user.name || "My Account";
+          document.getElementById("profileEmail").textContent =
+            user.email || "Not signed in";
+          document.getElementById("bigInitials").textContent = getUserInitials(
+            user.name,
+          );
+          const tx = getTransactions();
+          document.getElementById("profileCount").textContent = tx.length;
+          document.getElementById("profileSpend").textContent =
+            "₹" +
+            tx
+              .reduce((s, t) => s + Number(t.amount || 0), 0)
+              .toLocaleString("en-IN");
+        }
+        paint();
+        document
+          .getElementById("profileForm")
+          .addEventListener("submit", function (ev) {
+            ev.preventDefault();
+            user = { name: n.value.trim(), email: e.value.trim() };
+            localStorage.setItem(
+              "expenseGuardCurrentUser",
+              JSON.stringify(user),
+            );
+            localStorage.setItem("expenseGuardLoggedIn", "true");
+            paint();
+            const t = document.createElement("div");
+            t.className = "toast";
+            t.textContent = "Profile saved successfully";
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2200);
+          });
+      });
+    </script>
+  </body>
+</html>

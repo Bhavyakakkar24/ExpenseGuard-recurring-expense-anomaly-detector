@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Transactions - ExpenseGuard</title>
+
+    <link rel="stylesheet" href="../css/style.css?v=3" />
+
+    <link rel="stylesheet" href="../css/transactions.css?v=3" />
+
+    <link rel="stylesheet" href="../css/evaluation.css?v=3" />
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+      <aside class="sidebar">
+        <div class="logo">Expense<span>Guard</span></div>
+
+        <div class="menu-title">MAIN MENU</div>
+
+        <a href="../dashboard.html" class="nav-item">
+          <span class="nav-icon">⌂</span>
+
+          <span>Dashboard</span>
+        </a>
+
+        <a href="transactions.html" class="nav-item active">
+          <span class="nav-icon">₹</span>
+
+          <span>Transactions</span>
+        </a>
+
+        <a href="anomalies.html" class="nav-item">
+          <span class="nav-icon">⚠</span>
+
+          <span>Anomalies</span>
+        </a>
+
+        <a href="categories.html" class="nav-item">
+          <span class="nav-icon">▣</span>
+
+          <span>Categories</span>
+        </a>
+
+        <a href="reports.html" class="nav-item">
+          <span class="nav-icon">▤</span>
+
+          <span>Reports</span>
+        </a>
+
+        <div class="menu-title">TOOLS</div>
+
+        <a href="budgets.html" class="nav-item">
+          <span class="nav-icon">◫</span>
+
+          <span>Budgets</span>
+        </a>
+
+        <div class="menu-title">SETTINGS</div>
+
+        <a href="settings.html" class="nav-item">
+          <span class="nav-icon">⚙</span>
+
+          <span>Settings</span>
+        </a>
+      </aside>
+
+      <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+      <main class="main">
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <header class="header">
+          <div>
+            <h1>Transactions</h1>
+
+            <p>View and manage all your expenses.</p>
+          </div>
+
+          <!-- =================================================
+                 PROFILE
+            ================================================== -->
+
+          <div class="profile-wrapper" id="profileWrapper">
+            <button class="profile" id="profileButton" type="button">
+              <div class="profile-name">
+                <strong id="profileName"> My Account </strong>
+              </div>
+
+              <div class="profile-circle" id="profileInitials">BK</div>
+
+              <span class="profile-arrow" id="profileArrow"> ▼ </span>
+            </button>
+
+            <!-- PROFILE DROPDOWN -->
+
+            <div class="profile-dropdown" id="profileDropdown">
+              <div class="dropdown-user">
+                <div class="dropdown-avatar" id="dropdownInitials">BK</div>
+
+                <div>
+                  <strong id="dropdownName"> My Account </strong>
+
+                  <span id="dropdownEmail"> Not signed in </span>
+                </div>
+              </div>
+
+              <div class="dropdown-divider"></div>
+
+              <a href="profile.html">
+                👤
+
+                <span> My Profile </span>
+              </a>
+
+              <a href="settings.html">
+                ⚙
+
+                <span> Settings </span>
+              </a>
+
+              <div class="dropdown-divider"></div>
+
+              <button type="button" id="logoutButton" class="logout-option">
+                🚪
+
+                <span> Logout </span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- =================================================
+             TRANSACTIONS CARD
+        ================================================== -->
+
+        <section class="card">
+          <!-- =================================================
+                 CONTROLS
+            ================================================== -->
+
+          <div class="transaction-controls">
+            <!-- SEARCH -->
+
+            <div class="search-box">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search transactions..."
+              />
+            </div>
+
+            <!-- CATEGORY -->
+
+            <select id="categoryFilter">
+              <option value="All Categories">All Categories</option>
+
+              <option value="Food">Food</option>
+
+              <option value="Transport">Transport</option>
+
+              <option value="Shopping">Shopping</option>
+
+              <option value="Utilities">Utilities</option>
+
+              <option value="Rent">Rent</option>
+
+              <option value="Mobile / Internet">Mobile / Internet</option>
+
+              <option value="Entertainment">Entertainment</option>
+
+              <option value="Healthcare">Healthcare</option>
+
+              <option value="Education">Education</option>
+
+              <option value="Other">Other</option>
+            </select>
+
+            <!-- STATUS -->
+
+            <select id="statusFilter">
+              <option value="All Status">All Status</option>
+
+              <option value="Normal">Normal</option>
+
+              <option value="Anomaly">Anomaly</option>
+            </select>
+
+            <!-- RESET FILTER -->
+
+            <button type="button" id="resetFilters" class="reset-btn">
+              Reset
+            </button>
+
+            <!-- ADD TRANSACTION -->
+
+            <button class="add-btn small-btn" type="button" id="openAddButton">
+              + Add Transaction
+            </button>
+          </div>
+
+          <!-- =================================================
+                 TABLE
+            ================================================== -->
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>DATE</th>
+
+                  <th>DESCRIPTION</th>
+
+                  <th>CATEGORY</th>
+
+                  <th>AMOUNT</th>
+
+                  <th>Z-SCORE</th>
+
+                  <th>STATUS</th>
+
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+
+              <tbody id="transactionTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- =========================================================
+     ADD TRANSACTION MODAL
+========================================================== -->
+
+    <div id="transactionModal" class="transaction-modal">
+      <div class="transaction-modal-content">
+        <!-- HEADER -->
+
+        <div class="modal-header">
+          <div>
+            <span class="modal-label"> EXPENSEGUARD </span>
+
+            <h2>Add Transaction</h2>
+
+            <p>Add a new expense to your account.</p>
+          </div>
+
+          <button type="button" class="modal-close" id="closeModalButton">
+            ×
+          </button>
+        </div>
+
+        <!-- FORM -->
+
+        <form id="transactionModalForm">
+          <!-- DATE -->
+
+          <div class="form-group">
+            <label for="modalTransactionDate"> Date </label>
+
+            <input type="date" id="modalTransactionDate" required />
+          </div>
+
+          <!-- CATEGORY -->
+
+          <div class="form-group">
+            <label for="modalTransactionCategory"> Category </label>
+
+            <select id="modalTransactionCategory" required>
+              <option value="">Select Category</option>
+
+              <option value="Food">Food</option>
+
+              <option value="Transport">Transport</option>
+
+              <option value="Shopping">Shopping</option>
+
+              <option value="Utilities">Utilities</option>
+
+              <option value="Rent">Rent</option>
+
+              <option value="Mobile / Internet">Mobile / Internet</option>
+
+              <option value="Entertainment">Entertainment</option>
+
+              <option value="Healthcare">Healthcare</option>
+
+              <option value="Education">Education</option>
+
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- DESCRIPTION -->
+
+          <div class="form-group">
+            <label for="modalTransactionDescription"> Description </label>
+
+            <input
+              type="text"
+              id="modalTransactionDescription"
+              placeholder="e.g. Zomato, Uber, Amazon"
+              required
+            />
+          </div>
+
+          <!-- AMOUNT -->
+
+          <div class="form-group">
+            <label for="modalTransactionAmount"> Amount </label>
+
+            <div class="amount-input">
+              <span> ₹ </span>
+
+              <input
+                type="number"
+                id="modalTransactionAmount"
+                placeholder="Enter amount"
+                min="1"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- BUTTONS -->
+
+          <div class="modal-buttons">
+            <button type="button" class="cancel-btn" id="cancelModalButton">
+              Cancel
+            </button>
+
+            <button type="submit" class="add-btn">Add Transaction</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- =========================================================
+     JAVASCRIPT
+========================================================== -->
+
+    <script src="../javascript/app.js"></script>
+    <script src="../javascript/transaction.js"></script>
+  </body>
+</html>
