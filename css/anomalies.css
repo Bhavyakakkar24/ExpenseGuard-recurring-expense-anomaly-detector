@@ -1,0 +1,278 @@
+/* ===== ExpenseGuard Anomalies — Dark Risk Center ===== */
+.anomaly-page .main {
+  max-width: 1500px;
+}
+.risk-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 20px 22px;
+  border: 1px solid #1d3c63;
+  border-radius: 17px;
+  background: linear-gradient(135deg, #101f3a, #12304a 60%, #143e45);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+}
+.risk-hero h2 {
+  font-size: 18px;
+  margin: 4px 0;
+  font-weight: 700;
+}
+.risk-hero p {
+  color: #8fa9c8;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.risk-meter {
+  min-width: 210px;
+}
+.risk-meter .label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #90a9c7;
+  margin-bottom: 7px;
+}
+.risk-meter .label strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: #eef6ff;
+}
+.meter {
+  height: 9px;
+  background: #162b47;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.meter span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #39d59a, #f5c44c, #ef6262);
+  width: 18%;
+}
+.anomaly-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.anomaly-controls input,
+.anomaly-controls select {
+  background: #0c1a31;
+  color: #dce9f8;
+  border: 1px solid #244365;
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+}
+.anomaly-controls input {
+  flex: 1;
+  min-width: 220px;
+}
+.filter-btn {
+  border: 1px solid #28486d;
+  background: #0e203a;
+  color: #9bb3cf;
+  border-radius: 10px;
+  padding: 10px 13px;
+  cursor: pointer;
+}
+.filter-btn.active {
+  background: #214da5;
+  border-color: #3f7ff4;
+  color: white;
+}
+.demo-btn {
+  border: 0;
+  background: linear-gradient(135deg, #477ff3, #32cdbb);
+  color: white;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.detected-anomalies-list {
+  display: grid;
+  gap: 12px;
+}
+.detected-anomaly-card {
+  background: linear-gradient(180deg, #111f37, #0d1b31);
+  border: 1px solid #294362;
+  border-left: 4px solid #f0a53b;
+  border-radius: 15px;
+  padding: 17px;
+}
+.detected-anomaly-card.high {
+  border-left-color: #ef6262;
+}
+.detected-anomaly-card.medium {
+  border-left-color: #f0b34b;
+}
+.anomaly-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+.anomaly-card-header h3 {
+  font-size: 15px;
+}
+.anomaly-card-header p {
+  color: #7f9abb;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.anomaly-card-amount {
+  font-size: 21px;
+  color: #f2f6ff;
+  white-space: nowrap;
+}
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 5px 9px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 800;
+}
+.risk-badge.high {
+  background: #4a1e2a;
+  color: #ff8c99;
+}
+.risk-badge.medium {
+  background: #493a1c;
+  color: #f8ca62;
+}
+.risk-badge.low {
+  background: #123c34;
+  color: #55e0be;
+}
+.anomaly-card-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 13px;
+}
+.anomaly-card-info span {
+  background: #102641;
+  border: 1px solid #203e61;
+  color: #9bb2cd;
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 10px;
+}
+.anomaly-card-info .z-score {
+  color: #8bb0ff;
+}
+.anomaly-reason {
+  margin-top: 12px;
+  padding: 11px 12px;
+  background: #0b192e;
+  border: 1px solid #1b3658;
+  border-radius: 10px;
+}
+.anomaly-reason strong {
+  font-size: 11px;
+  color: #c9d9ec;
+}
+.anomaly-reason p {
+  font-size: 11px;
+  color: #819bb9;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.view-transaction-btn {
+  margin-top: 12px;
+  border: 1px solid #2f5b8e;
+  background: #112b4b;
+  color: #a8c9ff;
+  border-radius: 9px;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+.view-transaction-btn:hover {
+  background: #1a3c67;
+}
+.no-anomalies {
+  padding: 42px 20px;
+  text-align: center;
+  border: 1px solid #1f3b5e;
+  border-radius: 15px;
+  background: #0d1c32;
+}
+.no-anomalies-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #123f35;
+  color: #55dfbe;
+  font-size: 23px;
+}
+.no-anomalies h3 {
+  font-size: 15px;
+  margin: 0 0 5px;
+}
+.no-anomalies p {
+  color: #7f99b8;
+  font-size: 12px;
+  margin: 0;
+}
+.anomaly-explainer {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.detect-card {
+  background: #0d1d35;
+  border: 1px solid #1c3b60;
+  border-radius: 13px;
+  padding: 15px;
+}
+.detect-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: #214da5;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 12px;
+}
+.detect-card strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+}
+.detect-card p {
+  color: #7894b5;
+  font-size: 10px;
+  line-height: 1.5;
+  margin-top: 5px;
+}
+@media (max-width: 900px) {
+  .anomaly-explainer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .risk-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .risk-meter {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .anomaly-explainer {
+    grid-template-columns: 1fr;
+  }
+}
