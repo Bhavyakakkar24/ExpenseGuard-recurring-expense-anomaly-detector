@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Anomalies - ExpenseGuard</title>
+    <link rel="stylesheet" href="../css/style.css?v=3" />
+    <link rel="stylesheet" href="../css/evaluation.css?v=3" />
+    <link rel="stylesheet" href="../css/anomalies.css?v=3" />
+  </head>
+  <body class="anomaly-page">
+    <div class="container">
+      <aside class="sidebar">
+        <div class="logo">Expense<span>Guard</span></div>
+        <div class="menu-title">MAIN MENU</div>
+        <a href="../dashboard.html" class="nav-item"
+          ><span class="nav-icon">⌂</span><span>Dashboard</span></a
+        ><a href="transactions.html" class="nav-item"
+          ><span class="nav-icon">₹</span><span>Transactions</span></a
+        ><a href="anomalies.html" class="nav-item active"
+          ><span class="nav-icon">⚠</span><span>Anomalies</span></a
+        ><a href="categories.html" class="nav-item"
+          ><span class="nav-icon">▣</span><span>Categories</span></a
+        ><a href="reports.html" class="nav-item"
+          ><span class="nav-icon">▤</span><span>Reports</span></a
+        >
+        <div class="menu-title">TOOLS</div>
+        <a href="budgets.html" class="nav-item"
+          ><span class="nav-icon">◫</span><span>Budgets</span></a
+        >
+        <div class="menu-title">SETTINGS</div>
+        <a href="settings.html" class="nav-item"
+          ><span class="nav-icon">⚙</span><span>Settings</span></a
+        >
+      </aside>
+      <main class="main">
+        <header class="header">
+          <div>
+            <div class="eyebrow">SMART RISK MONITOR</div>
+            <h1>Anomaly Center</h1>
+            <p>Find unusual expenses before they become spending surprises.</p>
+          </div>
+          <div class="profile">
+            <strong id="anUser">My Account</strong>
+            <div class="profile-circle" id="anInitials">EG</div>
+          </div>
+        </header>
+        <section class="risk-hero">
+          <div>
+            <div class="eyebrow">CURRENT RISK STATUS</div>
+            <h2 id="riskHeadline">Checking your spending...</h2>
+            <p id="riskSummary">
+              ExpenseGuard compares transactions with your normal spending
+              pattern.
+            </p>
+          </div>
+          <div class="risk-meter">
+            <div class="label">
+              <span>Portfolio risk</span><strong id="riskPercent">0%</strong>
+            </div>
+            <div class="meter"><span id="riskBar"></span></div>
+          </div>
+        </section>
+        <section class="stats">
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="stat-title">Flagged Expenses</div>
+              <div class="stat-icon">⚠</div>
+            </div>
+            <div class="stat-value" id="totalAnomalies">0</div>
+            <div class="stat-change warning" id="flaggedLabel">
+              Review recommended
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="stat-title">Highest Flag</div>
+              <div class="stat-icon">₹</div>
+            </div>
+            <div class="stat-value" id="highestAnomaly">₹0</div>
+            <div class="stat-change" id="highestAnomalyLabel">
+              No unusual expense
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="stat-title">Peak Z-Score</div>
+              <div class="stat-icon">↑</div>
+            </div>
+            <div class="stat-value" id="highestZScore">0.00</div>
+            <div class="stat-change" id="highestZScoreLabel">Normal range</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="stat-title">Risk Spend</div>
+              <div class="stat-icon">₹</div>
+            </div>
+            <div class="stat-value" id="anomalySpending">₹0</div>
+            <div class="stat-change" id="anomalySpendingLabel">
+              0% of total spending
+            </div>
+          </div>
+        </section>
+        <section class="card anomaly-section">
+          <div class="card-header">
+            <div>
+              <h2>⚠ Detected anomalies</h2>
+              <p>Filter the transactions that need your attention.</p>
+            </div>
+          </div>
+          <div class="anomaly-controls">
+            <input
+              id="anomalySearch"
+              placeholder="Search description or category..."
+            /><button class="filter-btn active" data-risk="all">All</button
+            ><button class="filter-btn" data-risk="high">High</button
+            ><button class="filter-btn" data-risk="medium">Medium</button
+            ><select id="anomalySort">
+              <option value="amount">Highest amount</option>
+              <option value="zscore">Highest z-score</option>
+              <option value="recent">Most recent</option></select
+            ><button class="demo-btn" id="demoAnomaly">
+              ＋ Add demo alert
+            </button>
+          </div>
+          <div id="anomalyList" class="detected-anomalies-list"></div>
+        </section>
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>How ExpenseGuard decides</h2>
+              <p>
+                Simple, explainable JavaScript logic for your first evaluation.
+              </p>
+            </div>
+          </div>
+          <div class="anomaly-explainer">
+            <div class="detect-card">
+              <div class="detect-num">1</div>
+              <strong>Group by category</strong>
+              <p>
+                Transactions are collected into category arrays using objects
+                and <b>forEach()</b>.
+              </p>
+            </div>
+            <div class="detect-card">
+              <div class="detect-num">2</div>
+              <strong>Calculate average</strong>
+              <p>
+                <b>reduce()</b> calculates the mean amount for the relevant
+                spending group.
+              </p>
+            </div>
+            <div class="detect-card">
+              <div class="detect-num">3</div>
+              <strong>Measure unusualness</strong>
+              <p>
+                A z-score compares an expense with its normal range. Larger
+                absolute values mean more unusual.
+              </p>
+            </div>
+            <div class="detect-card">
+              <div class="detect-num">4</div>
+              <strong>Assign risk</strong>
+              <p>
+                High and medium flags are shown with reasons so the result is
+                easy to explain.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="../javascript/app.js"></script>
+    <script src="../javascript/anomalies.js"></script>
+  </body>
+</html>
