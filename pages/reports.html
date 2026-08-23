@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ExpenseGuard — Reports</title>
+    <link rel="stylesheet" href="../css/style.css?v=3" />
+    <link rel="stylesheet" href="../css/evaluation.css?v=3" />
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="logo">Expense<span>Guard</span></div>
+        <div class="menu-title">MAIN MENU</div>
+        <a href="../dashboard.html" class="nav-item"
+          ><span class="nav-icon">⌂</span><span>Dashboard</span></a
+        ><a href="transactions.html" class="nav-item"
+          ><span class="nav-icon">₹</span><span>Transactions</span></a
+        ><a href="anomalies.html" class="nav-item"
+          ><span class="nav-icon">⚠</span><span>Anomalies</span></a
+        ><a href="categories.html" class="nav-item"
+          ><span class="nav-icon">▣</span><span>Categories</span></a
+        ><a href="reports.html" class="nav-item active"
+          ><span class="nav-icon">▤</span><span>Reports</span></a
+        >
+        <div class="menu-title">TOOLS</div>
+        <a href="budgets.html" class="nav-item"
+          ><span class="nav-icon">◫</span><span>Budgets</span></a
+        >
+        <div class="menu-title">SETTINGS</div>
+        <a href="settings.html" class="nav-item"
+          ><span class="nav-icon">⚙</span><span>Settings</span></a
+        >
+      </aside>
+      <main class="main">
+        <header class="header">
+          <div>
+            <div class="eyebrow">SPENDING INTELLIGENCE</div>
+            <h1>Reports</h1>
+            <p>Turn your saved transactions into a quick financial summary.</p>
+          </div>
+          <button
+            class="add-btn"
+            id="exportReport"
+            style="width: auto; padding: 10px 15px"
+          >
+            ↓ Export report
+          </button>
+        </header>
+        <section class="stats">
+          <div class="stat-card">
+            <div class="stat-title">TOTAL SPENDING</div>
+            <div class="stat-value" id="rTotal">₹0</div>
+            <div class="stat-change">All recorded expenses</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">AVERAGE</div>
+            <div class="stat-value" id="rAvg">₹0</div>
+            <div class="stat-change">Per transaction</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">TOP CATEGORY</div>
+            <div class="stat-value" id="rTop">—</div>
+            <div class="stat-change">Highest share</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">HIGH VALUE</div>
+            <div class="stat-value" id="rHigh">₹0</div>
+            <div class="stat-change">Largest transaction</div>
+          </div>
+        </section>
+        <div class="dashboard-grid">
+          <section class="card">
+            <div class="card-header">
+              <div>
+                <h2>Category performance</h2>
+                <p>Where your money is going.</p>
+              </div>
+            </div>
+            <div id="categoryReport"></div>
+          </section>
+          <section class="card">
+            <div class="card-header">
+              <div>
+                <h2>Top transactions</h2>
+                <p>Your five largest expenses.</p>
+              </div>
+            </div>
+            <div id="topTransactions"></div>
+          </section>
+        </div>
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Monthly summary</h2>
+              <p>A simple loop-based summary for your evaluation.</p>
+            </div>
+          </div>
+          <div id="monthReport"></div>
+        </section>
+      </main>
+    </div>
+    <script src="../javascript/app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (typeof rememberLastPage === "function") rememberLastPage("reports");
+        const tx =
+          typeof getTransactions === "function" ? getTransactions() : [];
+        const amounts = tx.map((t) => Number(t.amount) || 0);
+        const total = amounts.reduce((s, n) => s + n, 0);
+        document.getElementById("rTotal").textContent =
+          "₹" + total.toLocaleString("en-IN");
+        document.getElementById("rAvg").textContent =
+          "₹" + (amounts.length ? total / amounts.length : 0).toFixed(0);
+        document.getElementById("rHigh").textContent =
+          "₹" +
+          (amounts.length ? Math.max(...amounts) : 0).toLocaleString("en-IN");
+        const byCat = {};
+        tx.forEach(
+          (t) =>
+            (byCat[t.category] =
+              (byCat[t.category] || 0) + Number(t.amount || 0)),
+        );
+        const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+        document.getElementById("rTop").textContent = cats[0]?.[0] || "—";
+        const catBox = document.getElementById("categoryReport");
+        catBox.innerHTML = cats.length
+          ? cats
+              .map(([c, v]) => {
+                const pct = total ? (v / total) * 100 : 0;
+                return `<div class="category"><div class="category-top"><span class="category-name">${c}</span><span class="category-amount">₹${v.toLocaleString("en-IN")} · ${pct.toFixed(0)}%</span></div><div class="progress"><div class="progress-bar" style="width:${pct}%"></div></div></div>`;
+              })
+              .join("")
+          : `<div class="empty-state">No transactions yet.</div>`;
+        const top = [...tx]
+          .sort((a, b) => Number(b.amount) - Number(a.amount))
+          .slice(0, 5);
+        document.getElementById("topTransactions").innerHTML = top.length
+          ? top
+              .map(
+                (t, i) =>
+                  `<div class="security-item"><div class="security-icon">${i + 1}</div><div><strong>${t.description || "Expense"}</strong><span>${t.category} · ${t.date || ""}</span></div><strong style="margin-left:auto">₹${Number(t.amount).toLocaleString("en-IN")}</strong></div>`,
+              )
+              .join("")
+          : `<div class="empty-state">No transactions yet.</div>`;
+        const months = {};
+        tx.forEach((t) => {
+          const key = (t.date || "").slice(0, 7) || "Unknown";
+          months[key] = (months[key] || 0) + Number(t.amount || 0);
+        });
+        let monthHtml = "";
+        for (const [m, v] of Object.entries(months).sort().reverse())
+          monthHtml += `<div class="settings-row"><div><div class="settings-row-title">${m}</div><div class="settings-row-sub">Recorded spending for this month</div></div><strong>₹${v.toLocaleString("en-IN")}</strong></div>`;
+        document.getElementById("monthReport").innerHTML =
+          monthHtml ||
+          `<div class="empty-state">Add a transaction to generate a report.</div>`;
+        document.getElementById("exportReport").onclick = () => {
+          const data = `ExpenseGuard Report\\nTotal Spending,₹${total}\\nAverage,₹${amounts.length ? total / amounts.length : 0}\\nTop Category,${cats[0]?.[0] || "—"}\\nHighest Expense,₹${amounts.length ? Math.max(...amounts) : 0}`;
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(
+            new Blob([data], { type: "text/plain" }),
+          );
+          a.download = "expenseguard-report.txt";
+          a.click();
+          toast("Report exported");
+        };
+      });
+      function toast(m) {
+        const t = document.createElement("div");
+        t.className = "toast";
+        t.textContent = m;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2200);
+      }
+    </script>
+  </body>
+</html>
