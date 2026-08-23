@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>ExpenseGuard - Dashboard</title>
+
+    <link rel="stylesheet" href="css/style.css?v=3" />
+
+    <link rel="stylesheet" href="css/evaluation.css?v=3" />
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+      <aside class="sidebar">
+        <div class="logo">Expense<span>Guard</span></div>
+
+        <div class="menu-title">MAIN MENU</div>
+
+        <a href="dashboard.html" class="nav-item active">
+          <span class="nav-icon">⌂</span>
+
+          <span>Dashboard</span>
+        </a>
+
+        <a href="pages/transactions.html" class="nav-item">
+          <span class="nav-icon">₹</span>
+
+          <span>Transactions</span>
+        </a>
+
+        <a href="pages/anomalies.html" class="nav-item">
+          <span class="nav-icon">⚠</span>
+
+          <span>Anomalies</span>
+        </a>
+
+        <a href="pages/categories.html" class="nav-item">
+          <span class="nav-icon">▣</span>
+
+          <span>Categories</span> </a
+        ><a href="pages/reports.html" class="nav-item"
+          ><span class="nav-icon">▤</span><span>Reports</span></a
+        >
+        <div class="menu-title">TOOLS</div>
+        <a href="pages/budgets.html" class="nav-item"
+          ><span class="nav-icon">◫</span><span>Budgets</span></a
+        >
+
+        <div class="menu-title">SETTINGS</div>
+
+        <a href="pages/settings.html" class="nav-item">
+          <span class="nav-icon">⚙</span>
+
+          <span>Settings</span>
+        </a>
+      </aside>
+
+      <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+      <main class="main">
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <header class="header">
+          <div>
+            <h1>Expense Dashboard</h1>
+
+            <p>Monitor your spending and detect unusual expenses.</p>
+          </div>
+
+          <div class="profile-wrapper">
+            <button class="profile" id="profileButton" type="button">
+              <div class="profile-name">
+                <strong id="profileName"> My Account </strong>
+              </div>
+
+              <div class="profile-circle" id="profileInitials">BK</div>
+
+              <span class="profile-arrow"> ▼ </span>
+            </button>
+
+            <!-- PROFILE DROPDOWN -->
+
+            <div class="profile-dropdown" id="profileDropdown">
+              <div class="dropdown-user">
+                <div class="dropdown-avatar" id="dropdownInitials">BK</div>
+
+                <div>
+                  <strong id="dropdownName"> My Account </strong>
+
+                  <span id="dropdownEmail"> Not signed in </span>
+                </div>
+              </div>
+
+              <div class="dropdown-divider"></div>
+
+              <a href="pages/profile.html">
+                👤
+                <span>My Profile</span>
+              </a>
+
+              <a href="pages/settings.html">
+                ⚙
+                <span>Settings</span>
+              </a>
+
+              <div class="dropdown-divider"></div>
+
+              <button type="button" id="logoutButton" class="logout-option">
+                🚪
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- =================================================
+             STATISTICS
+        ================================================== -->
+
+        <section class="stats">
+          <!-- TOTAL SPENDING -->
+
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="statpr-title">Total Spending</div>
+
+              <div class="stat-icon">₹</div>
+            </div>
+
+            <div class="stat-value" id="totalSpending">₹0</div>
+
+            <div class="stat-change">Your total recorded expenses</div>
+          </div>
+
+          <!-- TRANSACTIONS -->
+
+          <a href="pages/transactions.html" class="stat-card stat-card-link">
+            <div class="stat-top">
+              <div class="stat-title">Transactions</div>
+
+              <div class="stat-icon">#</div>
+            </div>
+
+            <div class="stat-value" id="transactionCount">0</div>
+
+            <div class="stat-change">Total recorded transactions</div>
+          </a>
+
+          <!-- ANOMALIES -->
+
+          <a href="pages/anomalies.html" class="stat-card stat-card-link">
+            <div class="stat-top">
+              <div class="stat-title">Anomalies Detected</div>
+
+              <div class="stat-icon">⚠</div>
+            </div>
+
+            <div class="stat-value" id="anomalyCount">0</div>
+
+            <div class="stat-change warning" id="anomalyMessage">
+              No anomalies detected
+            </div>
+          </a>
+
+          <!-- AVERAGE -->
+
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="stat-title">Average Expense</div>
+
+              <div class="stat-icon">₹</div>
+            </div>
+
+            <div class="stat-value" id="averageExpense">₹0</div>
+
+            <div class="stat-change">Per transaction</div>
+          </div>
+        </section>
+
+        <!-- =================================================
+             ADD TRANSACTION + CATEGORY
+        ================================================== -->
+
+        <section class="dashboard-grid">
+          <!-- =================================================
+                 ADD TRANSACTION
+            ================================================== -->
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>Add Transaction</h2>
+
+                <p>Enter a new expense manually.</p>
+              </div>
+            </div>
+
+            <form id="transactionForm">
+              <!-- DATE + CATEGORY -->
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label> Date </label>
+
+                  <input type="date" id="transactionDate" required />
+                </div>
+
+                <div class="form-group">
+                  <label> Category </label>
+
+                  <select id="transactionCategory" required>
+                    <option value="Food">Food</option>
+
+                    <option value="Transport">Transport</option>
+
+                    <option value="Shopping">Shopping</option>
+
+                    <option value="Utilities">Utilities</option>
+
+                    <option value="Rent">Rent</option>
+
+                    <option value="Mobile / Internet">Mobile / Internet</option>
+
+                    <option value="Entertainment">Entertainment</option>
+
+                    <option value="Healthcare">Healthcare</option>
+
+                    <option value="Education">Education</option>
+
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- DESCRIPTION -->
+
+              <div class="form-group">
+                <label> Description </label>
+
+                <input
+                  type="text"
+                  id="transactionDescription"
+                  placeholder="e.g. Zomato, Uber, Netflix"
+                  required
+                />
+              </div>
+
+              <!-- AMOUNT -->
+
+              <div class="form-group">
+                <label> Amount </label>
+
+                <div class="amount-input">
+                  <span class="rupee"> ₹ </span>
+
+                  <input
+                    type="number"
+                    id="transactionAmount"
+                    placeholder="Enter amount"
+                    min="1"
+                    step="0.01"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- ADD BUTTON -->
+
+              <button type="submit" class="add-btn">+ Add Expense</button>
+            </form>
+
+            <!-- CSV UPLOAD -->
+
+            <div class="upload-box">
+              <div class="upload-icon">📄</div>
+
+              <p>Import transactions from CSV</p>
+
+              <p>
+                <label for="csvFile" class="csv-label"> Choose CSV file </label>
+
+                or drag and drop
+              </p>
+
+              <input type="file" id="csvFile" accept=".csv,text/csv" hidden />
+            </div>
+          </div>
+
+          <!-- =================================================
+                 SPENDING BY CATEGORY
+            ================================================== -->
+
+          <a href="pages/categories.html" class="card category-card-link">
+            <div class="card-header">
+              <div>
+                <h2>Spending by Category</h2>
+
+                <p>Your current spending distribution.</p>
+              </div>
+            </div>
+
+            <div id="categoryContainer">
+              <!-- JavaScript will create categories here -->
+            </div>
+          </a>
+        </section>
+
+        <!-- =================================================
+             ANOMALY ALERTS
+        ================================================== -->
+
+        <section class="card anomaly-section">
+          <div class="card-header">
+            <div>
+              <h2>⚠ Anomaly Alerts</h2>
+
+              <p>
+                Transactions that differ significantly from your normal
+                spending.
+              </p>
+            </div>
+          </div>
+
+          <div id="dashboardAnomalies">
+            <!-- JavaScript inserts anomalies here -->
+          </div>
+        </section>
+
+        <!-- =================================================
+             RECENT TRANSACTIONS
+        ================================================== -->
+
+        <section class="transactions-card">
+          <div class="card-header">
+            <div>
+              <h2>Recent Transactions</h2>
+
+              <p>Your latest recorded expenses.</p>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>DATE</th>
+
+                  <th>DESCRIPTION</th>
+
+                  <th>CATEGORY</th>
+
+                  <th>AMOUNT</th>
+
+                  <th>Z-SCORE</th>
+
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+
+              <tbody id="transactionTableBody">
+                <!-- JavaScript inserts transactions -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- =====================================================
+     TRANSACTION DETAILS MODAL
+====================================================== -->
+
+    <div id="transactionModal" class="transaction-modal">
+      <div class="transaction-modal-content">
+        <div class="modal-header">
+          <div>
+            <span class="modal-label"> TRANSACTION DETAILS </span>
+
+            <h2 id="modalDescription">Transaction</h2>
+          </div>
+
+          <button class="modal-close" onclick="closeTransactionModal()">
+            ×
+          </button>
+        </div>
+
+        <!-- AMOUNT -->
+
+        <div class="modal-amount-section">
+          <span> Amount </span>
+
+          <strong id="modalAmount"> ₹0 </strong>
+        </div>
+
+        <!-- DETAILS -->
+
+        <div class="modal-details">
+          <div class="modal-detail">
+            <span> Date </span>
+
+            <strong id="modalDate"> - </strong>
+          </div>
+
+          <div class="modal-detail">
+            <span> Category </span>
+
+            <strong id="modalCategory"> - </strong>
+          </div>
+
+          <div class="modal-detail">
+            <span> Z-Score </span>
+
+            <strong id="modalZScore" class="modal-zscore"> - </strong>
+          </div>
+
+          <div class="modal-detail">
+            <span> Status </span>
+
+            <strong id="modalStatus" class="modal-status"> - </strong>
+          </div>
+        </div>
+
+        <!-- WHY FLAGGED -->
+
+        <div class="modal-warning" id="modalWarning">
+          <div class="modal-warning-icon">⚠</div>
+
+          <div>
+            <strong> Why was this flagged? </strong>
+
+            <p id="modalReason">-</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="modal-close-btn" onclick="closeTransactionModal()">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
+
+    <script src="javascript/app.js"></script>
+  </body>
+</html>
