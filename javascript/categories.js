@@ -52,18 +52,23 @@ document.addEventListener("DOMContentLoaded", function () {
   const money = (n) =>
     "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
-  document.getElementById("sumTotal").textContent = money(grand);
-  document.getElementById("sumCategories").textContent = entries.length;
-  document.getElementById("sumAverage").textContent = money(
-    entries.length ? grand / entries.length : 0,
-  );
+  const sumTotalEl = document.getElementById("sumTotal");
+  const sumCatEl = document.getElementById("sumCategories");
+  const sumAvgEl = document.getElementById("sumAverage");
+  const sumTopEl = document.getElementById("sumTop");
+  const sumTopHintEl = document.getElementById("sumTopHint");
+  const donutTotalEl = document.getElementById("donutTotal");
+
+  if (sumTotalEl) sumTotalEl.textContent = money(grand);
+  if (sumCatEl) sumCatEl.textContent = entries.length;
+  if (sumAvgEl) sumAvgEl.textContent = money(entries.length ? grand / entries.length : 0);
 
   const top = entries.slice().sort((a, b) => b.total - a.total)[0];
-  document.getElementById("sumTop").textContent = top ? top.name : "—";
-  document.getElementById("sumTopHint").textContent = top
-    ? money(top.total) + " spent"
-    : "No data yet";
-  document.getElementById("donutTotal").textContent = money(grand);
+  if (sumTopEl) sumTopEl.textContent = top ? top.name : "—";
+  if (sumTopHintEl) {
+    sumTopHintEl.textContent = top ? money(top.total) + " spent" : "No data yet";
+  }
+  if (donutTotalEl) donutTotalEl.textContent = money(grand);
 
   function render() {
     const q = document
@@ -190,12 +195,10 @@ document.addEventListener("DOMContentLoaded", function () {
   render();
   renderInsights();
 
-  document
-    .getElementById("categorySearch")
-    .addEventListener("input", render);
-  document
-    .getElementById("categorySort")
-    .addEventListener("change", render);
+  const catSearch = document.getElementById("categorySearch");
+  const catSort = document.getElementById("categorySort");
+  if (catSearch) catSearch.addEventListener("input", render);
+  if (catSort) catSort.addEventListener("change", render);
 
   const u = typeof getCurrentUser === "function" ? getCurrentUser() : null;
   if (u) {

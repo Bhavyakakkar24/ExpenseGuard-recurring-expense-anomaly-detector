@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Helpful fallback for small categories: compare against overall spending.
       if (values.length < 2 && globalMean > 0)
         z = t.amount >= globalMean * 1.6 ? t.amount / globalMean : 0;
+      if (!Number.isFinite(z)) z = 0;
       const ratio = mean > 0 ? t.amount / mean : 0;
       const unusual = Math.abs(z) >= 1.8 || (values.length < 2 && ratio >= 1.6);
       const risk = unusual
@@ -34,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
         zScore: Number(z.toFixed(2)),
         risk,
         isAnomaly: unusual,
-        ratio,
+        ratio: Number.isFinite(ratio) ? ratio : 0,
       };
     });
   }
