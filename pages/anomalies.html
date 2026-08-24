@@ -7,6 +7,15 @@
     <link rel="stylesheet" href="../css/style.css?v=3" />
     <link rel="stylesheet" href="../css/evaluation.css?v=3" />
     <link rel="stylesheet" href="../css/anomalies.css?v=3" />
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("expenseGuardTheme") === "light") {
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="anomaly-page">
     <div class="container">
@@ -112,14 +121,16 @@
             <input
               id="anomalySearch"
               placeholder="Search description or category..."
-            /><button class="filter-btn active" data-risk="all">All</button
-            ><button class="filter-btn" data-risk="high">High</button
-            ><button class="filter-btn" data-risk="medium">Medium</button
-            ><select id="anomalySort">
+            />
+            <button class="filter-btn active" data-risk="all">All</button>
+            <button class="filter-btn" data-risk="high">High</button>
+            <button class="filter-btn" data-risk="medium">Medium</button>
+            <select id="anomalySort">
               <option value="amount">Highest amount</option>
               <option value="zscore">Highest z-score</option>
-              <option value="recent">Most recent</option></select
-            ><button class="demo-btn" id="demoAnomaly">
+              <option value="recent">Most recent</option>
+            </select>
+            <button class="demo-btn" id="demoAnomaly">
               ＋ Add demo alert
             </button>
           </div>
