@@ -1452,3 +1452,91 @@ td {
 .profile-wrapper.open .profile-dropdown {
   display: block;
 }
+
+/* ============================================================
+   SETTINGS TOGGLE FUNCTIONALITY STYLES
+============================================================ */
+
+/* 1. Motion Effects Toggle */
+html.no-motion *,
+html.no-motion *::before,
+html.no-motion *::after,
+body.no-motion *,
+body.no-motion *::before,
+body.no-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+/* 2. Compact Cards Toggle */
+html.compact-mode .stat-card,
+body.compact-mode .stat-card,
+html.compact-mode .card,
+body.compact-mode .card,
+html.compact-mode .settings-section,
+body.compact-mode .settings-section,
+html.compact-mode .security-item,
+body.compact-mode .security-item,
+html.compact-mode .anom-card,
+body.compact-mode .anom-card,
+html.compact-mode .budget-card,
+body.compact-mode .budget-card,
+html.compact-mode .report-card,
+body.compact-mode .report-card,
+html.compact-mode .category-card,
+body.compact-mode .category-card {
+  padding: 10px 14px !important;
+  margin-bottom: 10px !important;
+}
+
+html.compact-mode table td,
+body.compact-mode table td,
+html.compact-mode table th,
+body.compact-mode table th {
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+}
+
+html.compact-mode .stat-number,
+body.compact-mode .stat-number,
+html.compact-mode .metric-val,
+body.compact-mode .metric-val {
+  font-size: 1.35rem !important;
+  margin: 4px 0 !important;
+}
+
+/* 3. Anomaly Alerts Toggle */
+html.hide-anomaly-alerts .anomaly-section,
+body.hide-anomaly-alerts .anomaly-section,
+html.hide-anomaly-alerts .anomaly-alert,
+body.hide-anomaly-alerts .anomaly-alert,
+html.hide-anomaly-alerts #anomalyBanner,
+body.hide-anomaly-alerts #anomalyBanner,
+html.hide-anomaly-alerts .alert-banner,
+body.hide-anomaly-alerts .alert-banner,
+html.hide-anomaly-alerts .recent-anomalies-widget,
+body.hide-anomaly-alerts .recent-anomalies-widget,
+html.hide-anomaly-alerts .anomalies-notice,
+body.hide-anomaly-alerts .anomalies-notice,
+html.hide-anomaly-alerts #anomalyAlertBox,
+body.hide-anomaly-alerts #anomalyAlertBox {
+  display: none !important;
+}
+
+/* 4. Smart Spending Insights Toggle */
+html.hide-insights .insights-box,
+body.hide-insights .insights-box,
+html.hide-insights .spending-insights,
+body.hide-insights .spending-insights,
+html.hide-insights #categoryInsights,
+body.hide-insights #categoryInsights,
+html.hide-insights .smart-insights,
+body.hide-insights .smart-insights,
+html.hide-insights .insight-bullet,
+body.hide-insights .insight-bullet,
+html.hide-insights .cat-insight-card,
+body.hide-insights .cat-insight-card {
+  display: none !important;
+}
+
