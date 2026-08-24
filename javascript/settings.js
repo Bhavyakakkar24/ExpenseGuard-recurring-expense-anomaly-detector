@@ -67,11 +67,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.querySelectorAll(".switch[data-key]").forEach((btn) => {
     const key = "expenseGuardSetting_" + btn.dataset.key;
-    btn.classList.toggle("on", localStorage.getItem(key) !== "false");
+    const isCompact = btn.dataset.key === "compact";
+    const savedVal = localStorage.getItem(key);
+
+    let isOn;
+    if (savedVal !== null) {
+      isOn = savedVal === "true";
+    } else {
+      isOn = !isCompact; // compact defaults to false, all other toggles default to true
+    }
+
+    btn.classList.toggle("on", isOn);
+    btn.setAttribute("aria-checked", String(isOn));
+
     btn.addEventListener("click", () => {
-      btn.classList.toggle("on");
-      localStorage.setItem(key, String(btn.classList.contains("on")));
+      const nowOn = btn.classList.toggle("on");
+      btn.setAttribute("aria-checked", String(nowOn));
+      localStorage.setItem(key, String(nowOn));
       saved("Preference updated");
+
+      if (typeof applySettings === "function") {
+        applySettings();
+      }
     });
   });
 
