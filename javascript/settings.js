@@ -224,29 +224,59 @@ document.addEventListener("DOMContentLoaded", function () {
   const loadDemoBtn = document.getElementById("loadDemo");
   if (loadDemoBtn) {
     loadDemoBtn.onclick = () => {
-      const data = [
-        ["Food", "Zomato", 450],
-        ["Transport", "Uber", 280],
-        ["Shopping", "Amazon", 2499],
-        ["Bills", "Electricity", 1560],
-        ["Entertainment", "Netflix", 649],
-        ["Food", "Cafe", 520],
-        ["Transport", "Metro", 180],
-        ["Healthcare", "Pharmacy", 720],
-        ["Education", "Course Material", 1200],
-        ["Food", "Weekend Dinner", 5000],
+      const presentationDemoData = [
+        // --- UTILITIES (Normal Baseline) ---
+        { id: "tx_1", date: "2023-09-05", category: "Utilities", description: "Electricity Bill", amount: 1200 },
+        { id: "tx_2", date: "2023-10-05", category: "Utilities", description: "Electricity Bill", amount: 1250 },
+        { id: "tx_3", date: "2023-11-05", category: "Utilities", description: "Electricity Bill", amount: 1180 },
+
+        // --- SUBSCRIPTIONS (3 Normal, 1 HIGH RISK) ---
+        { id: "tx_4", date: "2023-08-01", category: "Subscriptions", description: "Streaming Service", amount: 500 },
+        { id: "tx_5", date: "2023-09-01", category: "Subscriptions", description: "Streaming Service", amount: 500 },
+        { id: "tx_6", date: "2023-10-01", category: "Subscriptions", description: "Streaming Service", amount: 500 },
+        { id: "tx_7", date: "2023-11-01", category: "Subscriptions", description: "Annual Software License", amount: 1999 }, // 🚨 High Risk (>3x Average)
+
+        // --- DINING OUT (4 Normal, 1 HIGH RISK) ---
+        { id: "tx_8", date: "2023-10-02", category: "Dining", description: "Cafe Lunch", amount: 800 },
+        { id: "tx_9", date: "2023-10-09", category: "Dining", description: "Dinner with friends", amount: 950 },
+        { id: "tx_10", date: "2023-10-16", category: "Dining", description: "Takeout", amount: 850 },
+        { id: "tx_11", date: "2023-10-23", category: "Dining", description: "Cafe Lunch", amount: 900 },
+        { id: "tx_12", date: "2023-10-30", category: "Dining", description: "Anniversary Fine Dining", amount: 4500 }, // 🚨 High Risk (>3x Average)
+
+        // --- SHOPPING (3 Normal, 1 HIGH RISK) ---
+        { id: "tx_13", date: "2023-09-10", category: "Shopping", description: "Clothing", amount: 1500 },
+        { id: "tx_14", date: "2023-10-12", category: "Shopping", description: "Shoes", amount: 1200 },
+        { id: "tx_15", date: "2023-11-02", category: "Shopping", description: "Home goods", amount: 1600 },
+        { id: "tx_16", date: "2023-11-15", category: "Shopping", description: "New Smartphone", amount: 5500 }, // 🚨 High Risk (>3x Average)
+
+        // --- GROCERIES (5 Normal, 1 MEDIUM RISK) ---
+        { id: "tx_17", date: "2023-10-03", category: "Groceries", description: "Supermarket", amount: 2000 },
+        { id: "tx_18", date: "2023-10-10", category: "Groceries", description: "Supermarket", amount: 2200 },
+        { id: "tx_19", date: "2023-10-17", category: "Groceries", description: "Supermarket", amount: 1800 },
+        { id: "tx_20", date: "2023-10-24", category: "Groceries", description: "Supermarket", amount: 2100 },
+        { id: "tx_21", date: "2023-10-31", category: "Groceries", description: "Supermarket", amount: 1900 },
+        { id: "tx_22", date: "2023-11-07", category: "Groceries", description: "Hosting Party Groceries", amount: 2380 }, // ⚠️ Medium Risk (Z-Score ~2.4)
+
+        // --- TRANSPORTATION (4 Normal, 1 MEDIUM RISK) ---
+        { id: "tx_23", date: "2023-10-04", category: "Transportation", description: "Cab Ride", amount: 350 },
+        { id: "tx_24", date: "2023-10-11", category: "Transportation", description: "Cab Ride", amount: 400 },
+        { id: "tx_25", date: "2023-10-18", category: "Transportation", description: "Cab Ride", amount: 320 },
+        { id: "tx_26", date: "2023-10-25", category: "Transportation", description: "Cab Ride", amount: 380 },
+        { id: "tx_27", date: "2023-11-08", category: "Transportation", description: "Cab Ride (Surge Pricing)", amount: 500 } // ⚠️ Medium Risk (Z-Score ~2.3)
       ];
-      const now = new Date();
-      const demo = data.map((x, i) => ({
-        id: Date.now() + i,
-        date: new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10),
-        category: x[0],
-        description: x[1],
-        amount: x[2],
-      }));
-      if (typeof saveTransactions === "function") saveTransactions(demo);
-      saved("Demo data loaded");
-      setTimeout(() => (location.href = "../dashboard.html"), 650);
+
+      // 1. Save this specific array to localStorage
+      localStorage.setItem("expenseGuardTransactions", JSON.stringify(presentationDemoData));
+      if (typeof saveTransactions === "function") {
+        saveTransactions(presentationDemoData);
+      }
+      if (typeof saved === "function") {
+        saved("Demo data loaded");
+      }
+
+      // 2. Alert the user and reload the page
+      alert("Full presentation demo data loaded! The dashboard is now populated.");
+      window.location.reload();
     };
   }
 

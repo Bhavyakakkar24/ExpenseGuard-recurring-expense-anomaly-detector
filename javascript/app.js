@@ -198,40 +198,136 @@ function calculateZScore(amount, values) {
 } 
  
 // ============================================================ 
-// ANOMALY DETECTION 
+// CENTRALIZED STATISTICAL RISK ENGINE 
 // ============================================================ 
  
+function buildCategoryStats(allTransactions = []) {
+  const categoryGroups = {};
+  const allAmounts = [];
+ 
+  (allTransactions || []).forEach((t) => {
+    const cat = t.category || "Other";
+    const amt = Number(t.amount) || 0;
+    if (!categoryGroups[cat]) {
+      categoryGroups[cat] = [];
+    }
+    categoryGroups[cat].push(amt);
+    allAmounts.push(amt);
+  });
+ 
+  const globalMean = calculateMean(allAmounts);
+  const stats = { globalMean, categories: {} };
+ 
+  Object.keys(categoryGroups).forEach((cat) => {
+    const values = categoryGroups[cat];
+    stats.categories[cat] = {
+      values,
+      mean: calculateMean(values),
+      sd: calculateStandardDeviation(values),
+      count: values.length,
+    };
+  });
+ 
+  return stats;
+}
+ 
+function analyzeTransactionRisk(tx, allTransactions = [], cachedStats = null) {
+  if (!tx) {
+    return {
+      zScore: 0,
+      patternRatio: 1,
+      ratio: 1,
+      riskLevel: "Normal",
+      risk: "low",
+      isAnomaly: false,
+    };
+  }
+ 
+  const amt = Number(tx.amount) || 0;
+  const cat = tx.category || "Other";
+  const stats = cachedStats || buildCategoryStats(allTransactions);
+  const catStat = stats.categories[cat] || {
+    values: [amt],
+    mean: amt,
+    sd: 0,
+    count: 1,
+  };
+ 
+  let zScore = 0;
+  let patternRatio = 1;
+ 
+  if (catStat.count >= 2) {
+    zScore = catStat.sd > 0 ? (amt - catStat.mean) / catStat.sd : 0;
+    patternRatio = catStat.mean > 0 ? amt / catStat.mean : 1;
+  } else {
+    // Fallback for single transaction in category: compare against global baseline
+    const globalMean = stats.globalMean;
+    if (globalMean > 0) {
+      zScore = amt >= globalMean * 1.6 ? amt / globalMean : 0;
+      patternRatio = amt / globalMean;
+    } else {
+      zScore = 0;
+      patternRatio = 1;
+    }
+  }
+ 
+  if (!Number.isFinite(zScore)) zScore = 0;
+  if (!Number.isFinite(patternRatio)) patternRatio = 1;
+ 
+  zScore = Number(zScore.toFixed(2));
+  patternRatio = Number(patternRatio.toFixed(2));
+ 
+  // Exact Thresholds specified:
+  // High Risk: zScore >= 2.6 OR patternRatio >= 3.0
+  // Medium Risk: zScore >= 1.8 OR patternRatio >= 1.6
+  // Normal: Anything else
+  let riskLevel = "Normal";
+  let isAnomaly = false;
+ 
+  if (zScore >= 2.6 || patternRatio >= 3.0) {
+    riskLevel = "High";
+    isAnomaly = true;
+  } else if (zScore >= 1.8 || patternRatio >= 1.6) {
+    riskLevel = "Medium";
+    isAnomaly = true;
+  } else {
+    riskLevel = "Normal";
+    isAnomaly = false;
+  }
+ 
+  return {
+    zScore,
+    patternRatio,
+    ratio: patternRatio,
+    riskLevel,
+    risk: riskLevel.toLowerCase(),
+    isAnomaly,
+  };
+}
+ 
+function analyzeAllTransactions(allTransactions = []) {
+  if (!Array.isArray(allTransactions) || allTransactions.length === 0) {
+    return [];
+  }
+  const stats = buildCategoryStats(allTransactions);
+  return allTransactions.map((tx) => {
+    const riskData = analyzeTransactionRisk(tx, allTransactions, stats);
+    return {
+      ...tx,
+      ...riskData,
+    };
+  });
+}
+ 
 function analyzeTransactions(transactions) { 
-  if (transactions.length === 0) { 
-    return []; 
-  } 
- 
-  const categoryAmounts = {}; 
- 
-  transactions.forEach((transaction) => { 
-    if (!categoryAmounts[transaction.category]) { 
-      categoryAmounts[transaction.category] = []; 
-    } 
- 
-    categoryAmounts[transaction.category].push(Number(transaction.amount)); 
-  }); 
- 
-  return transactions.map((transaction) => { 
-    const values = categoryAmounts[transaction.category]; 
- 
-    const zScore = calculateZScore(Number(transaction.amount), values); 
- 
-    const isAnomaly = Math.abs(zScore) >= 2; 
- 
-    return { 
-      ...transaction, 
- 
-      zScore: Number(zScore.toFixed(2)), 
- 
-      isAnomaly: isAnomaly, 
-    }; 
-  }); 
+  return analyzeAllTransactions(transactions);
 } 
+ 
+window.buildCategoryStats = buildCategoryStats;
+window.analyzeTransactionRisk = analyzeTransactionRisk;
+window.analyzeAllTransactions = analyzeAllTransactions;
+window.analyzeTransactions = analyzeTransactions;
+ 
  
 // ============================================================ 
 // ADD TRANSACTION 
@@ -1563,6 +1659,25 @@ function closeTransactionModal() {
   currentDashboardTransactionId = null;
 } 
 
+function toast(message) {
+  const existing = document.querySelectorAll(".toast");
+  existing.forEach((t) => t.remove());
+
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = message;
+  document.body.appendChild(t);
+
+  setTimeout(() => {
+    t.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+    t.style.opacity = "0";
+    t.style.transform = "translateY(8px)";
+    setTimeout(() => t.remove(), 300);
+  }, 2200);
+}
+
+window.toast = toast;
+
 // ============================================================
 // DELETE TRANSACTION (GLOBAL STATE MANAGEMENT)
 // ============================================================
@@ -1625,5 +1740,65 @@ function deleteCurrentDashboardTransaction() {
 
 window.deleteTransaction = deleteTransaction;
 window.deleteCurrentDashboardTransaction = deleteCurrentDashboardTransaction;
+
+// ============================================================
+// PRESENTATION DEMO DATASET
+// ============================================================
+
+function loadPresentationDemoData() {
+  const presentationDemoData = [
+    // --- UTILITIES (Normal Baseline) ---
+    { id: "tx_1", date: "2023-09-05", category: "Utilities", description: "Electricity Bill", amount: 1200 },
+    { id: "tx_2", date: "2023-10-05", category: "Utilities", description: "Electricity Bill", amount: 1250 },
+    { id: "tx_3", date: "2023-11-05", category: "Utilities", description: "Electricity Bill", amount: 1180 },
+
+    // --- SUBSCRIPTIONS (3 Normal, 1 HIGH RISK) ---
+    { id: "tx_4", date: "2023-08-01", category: "Subscriptions", description: "Streaming Service", amount: 500 },
+    { id: "tx_5", date: "2023-09-01", category: "Subscriptions", description: "Streaming Service", amount: 500 },
+    { id: "tx_6", date: "2023-10-01", category: "Subscriptions", description: "Streaming Service", amount: 500 },
+    { id: "tx_7", date: "2023-11-01", category: "Subscriptions", description: "Annual Software License", amount: 1999 }, // 🚨 High Risk (>3x Average)
+
+    // --- DINING OUT (4 Normal, 1 HIGH RISK) ---
+    { id: "tx_8", date: "2023-10-02", category: "Dining", description: "Cafe Lunch", amount: 800 },
+    { id: "tx_9", date: "2023-10-09", category: "Dining", description: "Dinner with friends", amount: 950 },
+    { id: "tx_10", date: "2023-10-16", category: "Dining", description: "Takeout", amount: 850 },
+    { id: "tx_11", date: "2023-10-23", category: "Dining", description: "Cafe Lunch", amount: 900 },
+    { id: "tx_12", date: "2023-10-30", category: "Dining", description: "Anniversary Fine Dining", amount: 4500 }, // 🚨 High Risk (>3x Average)
+
+    // --- SHOPPING (3 Normal, 1 HIGH RISK) ---
+    { id: "tx_13", date: "2023-09-10", category: "Shopping", description: "Clothing", amount: 1500 },
+    { id: "tx_14", date: "2023-10-12", category: "Shopping", description: "Shoes", amount: 1200 },
+    { id: "tx_15", date: "2023-11-02", category: "Shopping", description: "Home goods", amount: 1600 },
+    { id: "tx_16", date: "2023-11-15", category: "Shopping", description: "New Smartphone", amount: 5500 }, // 🚨 High Risk (>3x Average)
+
+    // --- GROCERIES (5 Normal, 1 MEDIUM RISK) ---
+    { id: "tx_17", date: "2023-10-03", category: "Groceries", description: "Supermarket", amount: 2000 },
+    { id: "tx_18", date: "2023-10-10", category: "Groceries", description: "Supermarket", amount: 2200 },
+    { id: "tx_19", date: "2023-10-17", category: "Groceries", description: "Supermarket", amount: 1800 },
+    { id: "tx_20", date: "2023-10-24", category: "Groceries", description: "Supermarket", amount: 2100 },
+    { id: "tx_21", date: "2023-10-31", category: "Groceries", description: "Supermarket", amount: 1900 },
+    { id: "tx_22", date: "2023-11-07", category: "Groceries", description: "Hosting Party Groceries", amount: 2380 }, // ⚠️ Medium Risk (Z-Score ~2.4)
+
+    // --- TRANSPORTATION (4 Normal, 1 MEDIUM RISK) ---
+    { id: "tx_23", date: "2023-10-04", category: "Transportation", description: "Cab Ride", amount: 350 },
+    { id: "tx_24", date: "2023-10-11", category: "Transportation", description: "Cab Ride", amount: 400 },
+    { id: "tx_25", date: "2023-10-18", category: "Transportation", description: "Cab Ride", amount: 320 },
+    { id: "tx_26", date: "2023-10-25", category: "Transportation", description: "Cab Ride", amount: 380 },
+    { id: "tx_27", date: "2023-11-08", category: "Transportation", description: "Cab Ride (Surge Pricing)", amount: 500 } // ⚠️ Medium Risk (Z-Score ~2.3)
+  ];
+
+  // 1. Save this specific array to localStorage
+  localStorage.setItem("expenseGuardTransactions", JSON.stringify(presentationDemoData));
+  if (typeof saveTransactions === "function") {
+    saveTransactions(presentationDemoData);
+  }
+
+  // 2. Alert the user and reload the page
+  alert("Full presentation demo data loaded! The dashboard is now populated.");
+  window.location.reload();
+}
+
+window.loadPresentationDemoData = loadPresentationDemoData;
+
  
  

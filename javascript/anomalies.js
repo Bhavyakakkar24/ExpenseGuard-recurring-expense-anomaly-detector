@@ -5,39 +5,26 @@ document.addEventListener("DOMContentLoaded", () => {
   let activeRisk = "all";
 
   function buildAnalysis() {
-    const tx = getTransactions().map((t) => ({
-      ...t,
-      amount: Number(t.amount) || 0,
-    }));
-    if (!tx.length) return [];
-    const groups = {};
-    tx.forEach((t) => (groups[t.category] ||= []).push(t.amount));
-    const global = tx.map((t) => t.amount);
-    const globalMean = calculateMean(global);
-    return tx.map((t) => {
-      const values = groups[t.category];
-      const mean = calculateMean(values);
-      const sd = calculateStandardDeviation(values);
-      let z = sd ? (t.amount - mean) / sd : 0;
-      // Helpful fallback for small categories: compare against overall spending.
-      if (values.length < 2 && globalMean > 0)
-        z = t.amount >= globalMean * 1.6 ? t.amount / globalMean : 0;
-      if (!Number.isFinite(z)) z = 0;
-      const ratio = mean > 0 ? t.amount / mean : 0;
-      const unusual = Math.abs(z) >= 1.8 || (values.length < 2 && ratio >= 1.6);
-      const risk = unusual
-        ? Math.abs(z) >= 2.6 || ratio >= 3
-          ? "high"
-          : "medium"
-        : "low";
-      return {
+    const raw = getTransactions();
+    if (typeof window.analyzeAllTransactions === "function") {
+      return window.analyzeAllTransactions(raw);
+    }
+    if (typeof window.analyzeTransactionRisk === "function") {
+      const stats = typeof window.buildCategoryStats === "function" ? window.buildCategoryStats(raw) : null;
+      return (raw || []).map((t) => ({
         ...t,
-        zScore: Number(z.toFixed(2)),
-        risk,
-        isAnomaly: unusual,
-        ratio: Number.isFinite(ratio) ? ratio : 0,
-      };
-    });
+        ...window.analyzeTransactionRisk(t, raw, stats),
+      }));
+    }
+    return (raw || []).map((t) => ({
+      ...t,
+      zScore: 0,
+      patternRatio: 1,
+      ratio: 1,
+      riskLevel: "Normal",
+      risk: "low",
+      isAnomaly: false,
+    }));
   }
 
   function money(n) {
@@ -128,17 +115,76 @@ document.addEventListener("DOMContentLoaded", () => {
       .querySelectorAll(".view-transaction-btn")
       .forEach((btn) =>
         btn.addEventListener("click", () =>
-          showAnomalyDetails(Number(btn.dataset.id)),
+          showAnomalyDetails(btn.dataset.id),
         ),
       );
   }
 
   function showAnomalyDetails(id) {
-    const t = buildAnalysis().find((x) => x.id === id);
-    if (!t) return;
-    alert(
-      `ANOMALY DETAILS\n\nDescription: ${t.description}\nAmount: ${money(t.amount)}\nCategory: ${t.category}\nDate: ${formatDate(t.date)}\nZ-Score: ${t.zScore}\nRisk: ${t.risk.toUpperCase()}\nPattern ratio: ${t.ratio.toFixed(1)}×\n\nThreshold: 1.80`,
-    );
+    const all = getTransactions();
+    const analyzed = typeof window.analyzeAllTransactions === "function"
+      ? window.analyzeAllTransactions(all)
+      : all;
+
+    const t = analyzed.find((x) => String(x.id) === String(id));
+    if (!t) {
+      alert("Transaction not found.");
+      return;
+    }
+
+    const cat = t.category || "Other";
+    const categoryTxs = all.filter((x) => (x.category || "Other") === cat);
+    const categoryAmounts = categoryTxs.map((x) => Number(x.amount) || 0);
+    const catMean = typeof calculateMean === "function" ? calculateMean(categoryAmounts) : 0;
+    const catSd = typeof calculateStandardDeviation === "function" ? calculateStandardDeviation(categoryAmounts) : 0;
+
+    const z = Number(t.zScore || 0);
+    const ratio = Number(t.patternRatio || t.ratio || (catMean > 0 ? t.amount / catMean : 1));
+    const risk = (t.riskLevel || (t.risk ? t.risk.toUpperCase() : "MEDIUM")).toUpperCase();
+
+    let reason = "";
+    if (risk === "HIGH" || z >= 2.6 || ratio >= 3.0) {
+      reason = ratio >= 3.0
+        ? `• Spending multiplier (${ratio.toFixed(2)}×) exceeds the High-Risk threshold (≥ 3.00× Category Average).`
+        : `• Statistical Z-Score (${z.toFixed(2)}) exceeds the High-Risk threshold (≥ 2.60 standard deviations).`;
+    } else {
+      reason = ratio >= 1.6
+        ? `• Spending multiplier (${ratio.toFixed(2)}×) exceeds the Medium-Risk threshold (≥ 1.60× Category Average).`
+        : `• Statistical Z-Score (${z.toFixed(2)}) exceeds the Medium-Risk threshold (≥ 1.80 standard deviations).`;
+    }
+
+    const message = [
+      `══════════════════════════════════════════════`,
+      `🚨 ANOMALY DETAIL & CALCULATION BREAKDOWN`,
+      `══════════════════════════════════════════════`,
+      ``,
+      `📋 TRANSACTION DETAILS:`,
+      `  • Description:  ${t.description || "Untitled expense"}`,
+      `  • Category:     ${cat}`,
+      `  • Amount:       ₹${Number(t.amount || 0).toLocaleString("en-IN")}`,
+      `  • Date:         ${formatDate(t.date)}`,
+      `  • Risk Status:  ${risk} RISK ANOMALY`,
+      ``,
+      `📊 CATEGORY BASELINE (${cat}):`,
+      `  • Category History:   ${categoryTxs.length} transaction(s)`,
+      `  • Category Mean (μ):  ₹${catMean.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
+      `  • Std Deviation (σ):  ₹${catSd.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
+      ``,
+      `📐 STATISTICAL CALCULATION STEPS:`,
+      `  1. Deviation from Average:`,
+      `     ₹${t.amount} - ₹${catMean.toFixed(2)} = ₹${(t.amount - catMean).toFixed(2)}`,
+      `  2. Z-Score Calculation (Z = (X - μ) / σ):`,
+      `     Z = (${t.amount} - ${catMean.toFixed(2)}) / ${catSd > 0 ? catSd.toFixed(2) : 1}`,
+      `     Z-Score = ${z.toFixed(2)}`,
+      `  3. Pattern Spending Ratio (X / μ):`,
+      `     ₹${t.amount} / ₹${catMean.toFixed(2)} = ${ratio.toFixed(2)}× of baseline average`,
+      ``,
+      `💡 WHY WAS THIS FLAGGED?`,
+      `  ${reason}`,
+      `══════════════════════════════════════════════`
+    ].join("\n");
+
+    alert(message);
   }
   window.showAnomalyDetails = showAnomalyDetails;
   search?.addEventListener("input", render);

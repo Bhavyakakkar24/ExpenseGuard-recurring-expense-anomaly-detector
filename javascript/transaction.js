@@ -89,113 +89,28 @@
   }
 
   // ========================================================
-  // MEAN
-  // ========================================================
-
-  function calculateMean(values) {
-    if (!values.length) {
-      return 0;
-    }
-
-    let total = 0;
-
-    values.forEach(function (value) {
-      total += Number(value) || 0;
-    });
-
-    return total / values.length;
-  }
-
-  // ========================================================
-  // STANDARD DEVIATION
-  // ========================================================
-
-  function calculateStandardDeviation(values) {
-    if (values.length <= 1) {
-      return 0;
-    }
-
-    const mean = calculateMean(values);
-
-    let total = 0;
-
-    values.forEach(function (value) {
-      const difference = (Number(value) || 0) - mean;
-
-      total += difference * difference;
-    });
-
-    const variance = total / values.length;
-
-    return Math.sqrt(variance);
-  }
-
-  // ========================================================
-  // Z-SCORE
-  // ========================================================
-
-  function calculateZScore(amount, categoryValues) {
-    if (categoryValues.length <= 1) {
-      return 0;
-    }
-
-    const mean = calculateMean(categoryValues);
-
-    const standardDeviation = calculateStandardDeviation(categoryValues);
-
-    if (!Number.isFinite(standardDeviation) || standardDeviation === 0) {
-      return 0;
-    }
-
-    return (Number(amount) - mean) / standardDeviation;
-  }
-
-  // ========================================================
-  // ANALYZE TRANSACTIONS
+  // ANALYZE TRANSACTIONS (CENTRALIZED RISK ENGINE)
   // ========================================================
 
   function analyzeTransactions(transactions) {
-    if (!transactions.length) {
-      return [];
+    if (typeof window.analyzeAllTransactions === "function") {
+      return window.analyzeAllTransactions(transactions);
     }
-
-    // -----------------------------------------------
-    // Group amounts by category
-    // -----------------------------------------------
-
-    const categoryAmounts = {};
-
-    transactions.forEach(function (transaction) {
-      const category = transaction.category || "Other";
-
-      if (!categoryAmounts[category]) {
-        categoryAmounts[category] = [];
-      }
-
-      categoryAmounts[category].push(Number(transaction.amount) || 0);
-    });
-
-    // -----------------------------------------------
-    // Calculate Z-score for each transaction
-    // -----------------------------------------------
-
-    return transactions.map(function (transaction) {
-      const category = transaction.category || "Other";
-
-      const values = categoryAmounts[category] || [];
-
-      const zScore = calculateZScore(Number(transaction.amount) || 0, values);
-
-      const roundedZScore = Number(zScore.toFixed(2));
-
-      return {
-        ...transaction,
-
-        zScore: roundedZScore,
-
-        isAnomaly: Math.abs(roundedZScore) >= 2,
-      };
-    });
+    if (typeof window.analyzeTransactionRisk === "function") {
+      const stats = typeof window.buildCategoryStats === "function" ? window.buildCategoryStats(transactions) : null;
+      return (transactions || []).map((t) => ({
+        ...t,
+        ...window.analyzeTransactionRisk(t, transactions, stats),
+      }));
+    }
+    return (transactions || []).map((t) => ({
+      ...t,
+      zScore: 0,
+      patternRatio: 1,
+      riskLevel: "Normal",
+      risk: "low",
+      isAnomaly: false,
+    }));
   }
 
   // ========================================================
