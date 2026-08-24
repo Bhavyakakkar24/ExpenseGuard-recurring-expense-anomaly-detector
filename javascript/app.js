@@ -1558,6 +1558,72 @@ function closeTransactionModal() {
   const modal = document.getElementById("transactionModal"); 
   if (modal) { 
     modal.classList.remove("open"); 
+    modal.classList.remove("show"); 
   } 
+  currentDashboardTransactionId = null;
 } 
+
+// ============================================================
+// DELETE TRANSACTION (GLOBAL STATE MANAGEMENT)
+// ============================================================
+
+let currentDashboardTransactionId = null;
+
+function deleteTransaction(transactionId) {
+  if (transactionId == null) {
+    return;
+  }
+
+  const confirmed = confirm(
+    "Are you sure you want to delete this transaction?",
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const stored = localStorage.getItem(STORAGE_KEY);
+  let transactions = [];
+  try {
+    transactions = stored ? JSON.parse(stored) : [];
+    if (!Array.isArray(transactions)) {
+      transactions = [];
+    }
+  } catch (error) {
+    transactions = [];
+  }
+
+  const updatedTransactions = transactions.filter(function (transaction) {
+    return String(transaction.id) !== String(transactionId);
+  });
+
+  saveTransactions(updatedTransactions);
+
+  closeTransactionModal();
+
+  // If on transactions page
+  const detailModal = document.getElementById("transactionDetailModal");
+  if (detailModal) {
+    detailModal.classList.remove("show");
+  }
+
+  if (typeof renderTransactions === "function") {
+    renderTransactions();
+  }
+
+  // If on dashboard
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
+}
+
+function deleteCurrentDashboardTransaction() {
+  if (currentDashboardTransactionId != null) {
+    deleteTransaction(currentDashboardTransactionId);
+  }
+}
+
+window.deleteTransaction = deleteTransaction;
+window.deleteCurrentDashboardTransaction = deleteCurrentDashboardTransaction;
+ 
  

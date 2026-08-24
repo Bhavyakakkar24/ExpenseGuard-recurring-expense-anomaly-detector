@@ -457,7 +457,10 @@
         </div>
 
         <div class="modal-footer">
-          <button class="modal-close-btn" onclick="closeTransactionModal()">
+          <button type="button" class="delete-btn modal-delete-btn" id="dashboardModalDeleteBtn" onclick="deleteCurrentDashboardTransaction()">
+            🗑 Delete Transaction
+          </button>
+          <button type="button" class="modal-close-btn" onclick="closeTransactionModal()">
             Close
           </button>
         </div>

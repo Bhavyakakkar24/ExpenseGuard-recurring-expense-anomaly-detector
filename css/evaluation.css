@@ -1388,3 +1388,80 @@ html[data-theme="light"] .settings-badge {
   background: #e0f2fe !important;
   color: #0369a1 !important;
 }
+
+/* =========================================================
+   TRANSACTION ACTION BUTTONS THEME RULES
+========================================================= */
+.actions-cell {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
+}
+
+.view-btn {
+  background: var(--surface-2, #122a4d) !important;
+  border: 1px solid var(--line, #234367) !important;
+  color: var(--teal, #27d3bd) !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.view-btn:hover {
+  background: rgba(39, 211, 189, 0.15) !important;
+  border-color: var(--teal, #27d3bd) !important;
+  color: #ffffff !important;
+}
+
+.delete-btn {
+  background: rgba(251, 113, 133, 0.12) !important;
+  border: 1px solid rgba(251, 113, 133, 0.35) !important;
+  color: var(--red, #fb7185) !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.delete-btn:hover {
+  background: var(--red, #fb7185) !important;
+  border-color: var(--red, #fb7185) !important;
+  color: #ffffff !important;
+}
+
+.modal-delete-btn {
+  padding: 9px 16px !important;
+  font-size: 13px !important;
+}
+
+html[data-theme="light"] .view-btn {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #2563eb !important;
+}
+
+html[data-theme="light"] .view-btn:hover {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .delete-btn {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #dc2626 !important;
+}
+
+html[data-theme="light"] .delete-btn:hover {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+

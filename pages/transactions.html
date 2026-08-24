@@ -355,6 +355,75 @@
     </div>
 
     <!-- =========================================================
+     TRANSACTION DETAIL MODAL
+========================================================== -->
+
+    <div id="transactionDetailModal" class="transaction-modal">
+      <div class="transaction-modal-content">
+        <div class="modal-header">
+          <div>
+            <span class="modal-label"> TRANSACTION DETAILS </span>
+            <h2 id="detailModalDescription">Transaction Details</h2>
+          </div>
+
+          <button type="button" class="modal-close" id="closeDetailModalButton" aria-label="Close modal">
+            ×
+          </button>
+        </div>
+
+        <!-- AMOUNT -->
+        <div class="modal-amount-section">
+          <span> Amount </span>
+          <strong id="detailModalAmount"> ₹0 </strong>
+        </div>
+
+        <!-- DETAILS -->
+        <div class="modal-details">
+          <div class="modal-detail">
+            <span> Date </span>
+            <strong id="detailModalDate"> - </strong>
+          </div>
+
+          <div class="modal-detail">
+            <span> Category </span>
+            <strong id="detailModalCategory"> - </strong>
+          </div>
+
+          <div class="modal-detail">
+            <span> Z-Score </span>
+            <strong id="detailModalZScore" class="modal-zscore"> - </strong>
+          </div>
+
+          <div class="modal-detail">
+            <span> Status </span>
+            <strong id="detailModalStatus" class="modal-status"> - </strong>
+          </div>
+        </div>
+
+        <!-- WHY FLAGGED -->
+        <div class="modal-warning" id="detailModalWarning" style="display: none;">
+          <div class="modal-warning-icon">⚠</div>
+          <div>
+            <strong> Why was this flagged? </strong>
+            <p id="detailModalReason">
+              This transaction is significantly higher than your typical spending pattern for this category.
+            </p>
+          </div>
+        </div>
+
+        <!-- FOOTER BUTTONS -->
+        <div class="modal-footer">
+          <button type="button" class="delete-btn modal-delete-btn" id="detailModalDeleteBtn">
+            🗑 Delete Transaction
+          </button>
+          <button type="button" class="modal-close-btn" id="cancelDetailModalBtn">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
      JAVASCRIPT
 ========================================================== -->
 

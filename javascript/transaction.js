@@ -329,15 +329,24 @@
                     </td>
 
                     <td>
-
-                        <button
-                            type="button"
-                            class="view-btn"
-                            data-id="${transaction.id}"
-                        >
-                            View
-                        </button>
-
+                        <div class="actions-cell">
+                            <button
+                                type="button"
+                                class="view-btn"
+                                data-id="${transaction.id}"
+                                title="View details"
+                            >
+                                View
+                            </button>
+                            <button
+                                type="button"
+                                class="delete-btn table-delete-btn"
+                                data-id="${transaction.id}"
+                                title="Delete transaction"
+                            >
+                                🗑 Delete
+                            </button>
+                        </div>
                     </td>
 
                 `;
@@ -352,10 +361,26 @@
     const viewButtons = tableBody.querySelectorAll(".view-btn");
 
     viewButtons.forEach(function (button) {
-      button.addEventListener("click", function () {
+      button.addEventListener("click", function (event) {
+        event.stopPropagation();
         const id = this.dataset.id;
 
         viewTransaction(id);
+      });
+    });
+
+    // -----------------------------------------------
+    // Delete buttons
+    // -----------------------------------------------
+
+    const deleteButtons = tableBody.querySelectorAll(".delete-btn");
+
+    deleteButtons.forEach(function (button) {
+      button.addEventListener("click", function (event) {
+        event.stopPropagation();
+        const id = this.dataset.id;
+
+        deleteTransaction(id);
       });
     });
 
@@ -365,6 +390,45 @@
 
     filterTransactions();
   }
+
+  // ========================================================
+  // DELETE TRANSACTION
+  // ========================================================
+
+  function deleteTransaction(transactionId) {
+    if (transactionId == null) {
+      return;
+    }
+
+    const confirmed = confirm(
+      "Are you sure you want to delete this transaction?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const transactions = getTransactions();
+
+    const updatedTransactions = transactions.filter(function (transaction) {
+      return String(transaction.id) !== String(transactionId);
+    });
+
+    const saved = saveTransactions(updatedTransactions);
+
+    if (!saved) {
+      alert("Transaction could not be deleted.");
+      return;
+    }
+
+    // Close detail modal if open
+    closeDetailModal();
+
+    // Re-render table immediately
+    renderTransactions();
+  }
+
+  window.deleteTransaction = deleteTransaction;
 
   // ========================================================
   // FILTER TRANSACTIONS
@@ -443,8 +507,67 @@
   }
 
   // ========================================================
-  // VIEW TRANSACTION
+  // VIEW TRANSACTION & DETAIL MODAL
   // ========================================================
+
+  let currentDetailTransactionId = null;
+
+  function openDetailModal(transaction) {
+    const modal = document.getElementById("transactionDetailModal");
+
+    if (!modal) {
+      alert(
+        "TRANSACTION DETAILS\n\n" +
+          "Description: " +
+          (transaction.description || "-") +
+          "\n\nAmount: ₹" +
+          Number(transaction.amount || 0).toLocaleString("en-IN") +
+          "\n\nCategory: " +
+          (transaction.category || "-") +
+          "\n\nDate: " +
+          formatDate(transaction.date) +
+          "\n\nZ-Score: " +
+          Number(transaction.zScore || 0).toFixed(2) +
+          "\n\nStatus: " +
+          (transaction.isAnomaly ? "ANOMALY" : "NORMAL"),
+      );
+      return;
+    }
+
+    currentDetailTransactionId = transaction.id;
+
+    const descEl = document.getElementById("detailModalDescription");
+    const amountEl = document.getElementById("detailModalAmount");
+    const dateEl = document.getElementById("detailModalDate");
+    const catEl = document.getElementById("detailModalCategory");
+    const zEl = document.getElementById("detailModalZScore");
+    const statusEl = document.getElementById("detailModalStatus");
+    const warningEl = document.getElementById("detailModalWarning");
+
+    if (descEl) descEl.textContent = transaction.description || "Transaction Details";
+    if (amountEl) amountEl.textContent = "₹" + Number(transaction.amount || 0).toLocaleString("en-IN");
+    if (dateEl) dateEl.textContent = formatDate(transaction.date);
+    if (catEl) catEl.textContent = transaction.category || "Other";
+    if (zEl) zEl.textContent = Number(transaction.zScore || 0).toFixed(2);
+    if (statusEl) {
+      statusEl.textContent = transaction.isAnomaly ? "⚠ Anomaly" : "✓ Normal";
+      statusEl.className = transaction.isAnomaly ? "modal-status status-anomaly" : "modal-status status-normal";
+    }
+
+    if (warningEl) {
+      warningEl.style.display = transaction.isAnomaly ? "flex" : "none";
+    }
+
+    modal.classList.add("show");
+  }
+
+  function closeDetailModal() {
+    const modal = document.getElementById("transactionDetailModal");
+    if (modal) {
+      modal.classList.remove("show");
+    }
+    currentDetailTransactionId = null;
+  }
 
   function viewTransaction(id) {
     const transactions = getTransactions();
@@ -461,21 +584,7 @@
       return;
     }
 
-    alert(
-      "TRANSACTION DETAILS\n\n" +
-        "Description: " +
-        (transaction.description || "-") +
-        "\n\nAmount: ₹" +
-        Number(transaction.amount || 0).toLocaleString("en-IN") +
-        "\n\nCategory: " +
-        (transaction.category || "-") +
-        "\n\nDate: " +
-        formatDate(transaction.date) +
-        "\n\nZ-Score: " +
-        Number(transaction.zScore || 0).toFixed(2) +
-        "\n\nStatus: " +
-        (transaction.isAnomaly ? "ANOMALY" : "NORMAL"),
-    );
+    openDetailModal(transaction);
   }
 
   // ========================================================
@@ -930,12 +1039,52 @@
     }
 
     // -----------------------------------------------
+    // TRANSACTION DETAIL MODAL LISTENERS
+    // -----------------------------------------------
+
+    const closeDetailBtn = document.getElementById("closeDetailModalButton");
+    if (closeDetailBtn) {
+      closeDetailBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        closeDetailModal();
+      });
+    }
+
+    const cancelDetailBtn = document.getElementById("cancelDetailModalBtn");
+    if (cancelDetailBtn) {
+      cancelDetailBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        closeDetailModal();
+      });
+    }
+
+    const detailDeleteBtn = document.getElementById("detailModalDeleteBtn");
+    if (detailDeleteBtn) {
+      detailDeleteBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        if (currentDetailTransactionId != null) {
+          deleteTransaction(currentDetailTransactionId);
+        }
+      });
+    }
+
+    const detailModal = document.getElementById("transactionDetailModal");
+    if (detailModal) {
+      detailModal.addEventListener("click", function (event) {
+        if (event.target === detailModal) {
+          closeDetailModal();
+        }
+      });
+    }
+
+    // -----------------------------------------------
     // Escape closes modal
     // -----------------------------------------------
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         closeAddTransaction();
+        closeDetailModal();
       }
     });
   }
