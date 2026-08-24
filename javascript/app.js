@@ -539,6 +539,83 @@ function initializeMobileNav() {
   });
 } 
  
+// ============================================================
+// PASSWORD VALIDATION & TOGGLE HELPERS
+// ============================================================
+
+function validateStrictPassword(password) {
+  const missing = [];
+
+  if (!password || password.length < 12) {
+    missing.push("Minimum of 12 characters in length");
+  }
+  if (!/[A-Z]/.test(password)) {
+    missing.push("At least one uppercase letter (A-Z)");
+  }
+  if (!/[a-z]/.test(password)) {
+    missing.push("At least one lowercase letter (a-z)");
+  }
+  if (!/[0-9]/.test(password)) {
+    missing.push("At least one number (0-9)");
+  }
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    missing.push("At least one special character (e.g. !@#$%^&*...)");
+  }
+
+  const strictPasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
+
+  return {
+    isValid: missing.length === 0 && strictPasswordRegex.test(password),
+    missing: missing,
+  };
+}
+
+function initializePasswordToggles() {
+  const toggleButtons = document.querySelectorAll(".password-toggle-btn");
+
+  toggleButtons.forEach((button) => {
+    if (button.dataset.initialized === "true") {
+      return;
+    }
+    button.dataset.initialized = "true";
+
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const targetId = button.getAttribute("data-target");
+      const input = targetId
+        ? document.getElementById(targetId)
+        : button.closest(".password-input-wrapper")?.querySelector("input");
+
+      if (!input) {
+        return;
+      }
+
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+
+      const eyeIcon = button.querySelector(".eye-icon");
+      const eyeOffIcon = button.querySelector(".eye-off-icon");
+
+      if (eyeIcon && eyeOffIcon) {
+        if (isPassword) {
+          eyeIcon.style.display = "none";
+          eyeOffIcon.style.display = "block";
+          button.setAttribute("aria-label", "Hide password");
+          button.setAttribute("title", "Hide password");
+        } else {
+          eyeIcon.style.display = "block";
+          eyeOffIcon.style.display = "none";
+          button.setAttribute("aria-label", "Show password");
+          button.setAttribute("title", "Show password");
+        }
+      }
+    });
+  });
+}
+
 function initializeSignup() { 
   const signupForm = document.getElementById("signupForm"); 
  
@@ -583,14 +660,17 @@ function initializeSignup() {
  
       return; 
     } 
- 
-    if (password.length < 6) { 
-      message.textContent = "Password must be at least 6 characters."; 
- 
-      message.className = "auth-message error"; 
- 
-      return; 
-    } 
+
+    // Strict Password Validation
+    const passwordValidation = validateStrictPassword(password);
+    if (!passwordValidation.isValid) {
+      const requirementsHtml = passwordValidation.missing
+        .map((req) => `<li>${req}</li>`)
+        .join("");
+      message.innerHTML = `<strong>Password does not meet requirements:</strong><ul>${requirementsHtml}</ul>`;
+      message.className = "auth-message error";
+      return;
+    }
  
     if (password !== confirmPassword) { 
       message.textContent = "Passwords do not match."; 
@@ -1384,10 +1464,12 @@ function logoutUser() {
 // ============================================================ 
  
 document.addEventListener("DOMContentLoaded", function () { 
-  // Authentication 
- 
+  // Authentication & Password Features 
+
+  initializePasswordToggles(); 
+
   initializeSignup(); 
- 
+
   initializeSignin(); 
  
   // Dashboard protection 

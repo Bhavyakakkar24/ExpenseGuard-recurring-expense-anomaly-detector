@@ -238,6 +238,55 @@ body {
 }
 
 /* ============================================================
+   PASSWORD INPUT WITH SHOW/HIDE TOGGLE
+============================================================ */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  padding-right: 44px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--muted, #91a6bf);
+  border-radius: 6px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  user-select: none;
+  z-index: 2;
+}
+
+.password-toggle-btn:hover {
+  color: var(--teal, #27d3bd);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.password-toggle-btn:focus-visible {
+  outline: 2px solid var(--indigo, #4f7cff);
+  color: var(--teal, #27d3bd);
+}
+
+.password-toggle-btn svg {
+  display: block;
+  pointer-events: none;
+}
+
+/* ============================================================
    BUTTON
 ============================================================ */
 .auth-btn {
@@ -287,6 +336,22 @@ body {
 
 .auth-message.error {
   color: var(--red, #fb7185);
+  background: rgba(251, 113, 133, 0.08);
+  border: 1px solid rgba(251, 113, 133, 0.22);
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: left;
+  line-height: 1.5;
+  font-size: 12.5px;
+}
+
+.auth-message.error ul {
+  margin: 6px 0 0 18px;
+  padding: 0;
+}
+
+.auth-message.error li {
+  margin-bottom: 2px;
 }
 
 /* ============================================================
@@ -370,6 +435,21 @@ html[data-theme="light"] .auth-form-group input:focus {
   border-color: #2563eb !important;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
   background: #ffffff !important;
+}
+
+html[data-theme="light"] .password-toggle-btn {
+  color: #64748b !important;
+}
+
+html[data-theme="light"] .password-toggle-btn:hover {
+  color: #2563eb !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+html[data-theme="light"] .auth-message.error {
+  color: #be123c !important;
+  background: #fff1f2 !important;
+  border-color: #fecdd3 !important;
 }
 
 html[data-theme="light"] .auth-switch {
