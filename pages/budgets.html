@@ -6,6 +6,15 @@
     <title>ExpenseGuard — Budgets</title>
     <link rel="stylesheet" href="../css/style.css?v=3" />
     <link rel="stylesheet" href="../css/evaluation.css?v=3" />
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("expenseGuardTheme") === "light") {
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div class="container">
@@ -38,6 +47,10 @@
             <div class="eyebrow">SPENDING LIMITS</div>
             <h1>Budgets</h1>
             <p>Set category limits and keep your spending under control.</p>
+          </div>
+          <div class="profile">
+            <strong id="budgetUser">My Account</strong>
+            <div class="profile-circle" id="budgetInitials">EG</div>
           </div>
         </header>
         <section class="card" style="margin-bottom: 16px">
