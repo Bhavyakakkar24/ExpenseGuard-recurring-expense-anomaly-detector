@@ -20,7 +20,10 @@
   <body class="anomaly-page">
     <div class="container">
       <aside class="sidebar">
-        <div class="logo">Expense<span>Guard</span></div>
+        <div class="sidebar-header-row">
+          <div class="logo">Expense<span>Guard</span></div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation">&times;</button>
+        </div>
         <div class="menu-title">MAIN MENU</div>
         <a href="../dashboard.html" class="nav-item"
           ><span class="nav-icon">⌂</span><span>Dashboard</span></a
@@ -44,10 +47,13 @@
       </aside>
       <main class="main">
         <header class="header">
-          <div>
-            <div class="eyebrow">SMART RISK MONITOR</div>
-            <h1>Anomaly Center</h1>
-            <p>Find unusual expenses before they become spending surprises.</p>
+          <div class="header-left-wrap">
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open Navigation">☰</button>
+            <div>
+              <div class="eyebrow">SMART RISK MONITOR</div>
+              <h1>Anomaly Center</h1>
+              <p>Find unusual expenses before they become spending surprises.</p>
+            </div>
           </div>
           <div class="profile">
             <strong id="anUser">My Account</strong>

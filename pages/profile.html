@@ -10,7 +10,10 @@
   <body>
     <div class="container">
       <aside class="sidebar">
-        <div class="logo">Expense<span>Guard</span></div>
+        <div class="sidebar-header-row">
+          <div class="logo">Expense<span>Guard</span></div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation">&times;</button>
+        </div>
         <div class="menu-title">MAIN MENU</div>
         <a href="../dashboard.html" class="nav-item"
           ><span class="nav-icon">⌂</span><span>Dashboard</span></a
@@ -34,10 +37,13 @@
       </aside>
       <main class="main">
         <header class="header">
-          <div>
-            <div class="eyebrow">YOUR ACCOUNT</div>
-            <h1>My Profile</h1>
-            <p>Manage your personal ExpenseGuard information.</p>
+          <div class="header-left-wrap">
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open Navigation">☰</button>
+            <div>
+              <div class="eyebrow">YOUR ACCOUNT</div>
+              <h1>My Profile</h1>
+              <p>Manage your personal ExpenseGuard information.</p>
+            </div>
           </div>
         </header>
         <div class="profile-grid">
@@ -164,5 +170,6 @@
           });
       });
     </script>
+    <script src="../javascript/app.js"></script>
   </body>
 </html>
