@@ -1,130 +1,126 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>Categories - ExpenseGuard</title>
-    <link rel="stylesheet" href="../css/style.css?v=3" />
-    <link rel="stylesheet" href="../css/evaluation.css?v=3" />
-    <link rel="stylesheet" href="../css/categories.css?v=3" />
-  </head>
-  <body class="categories-page">
-    <div class="container">
-      <aside class="sidebar">
-        <div class="logo">Expense<span>Guard</span></div>
-        <div class="menu-title">MAIN MENU</div>
-        <a href="../dashboard.html" class="nav-item"
-          ><span class="nav-icon">⌂</span><span>Dashboard</span></a
-        >
-        <a href="transactions.html" class="nav-item"
-          ><span class="nav-icon">₹</span><span>Transactions</span></a
-        >
-        <a href="anomalies.html" class="nav-item"
-          ><span class="nav-icon">⚠</span><span>Anomalies</span></a
-        >
-        <a href="categories.html" class="nav-item active"
-          ><span class="nav-icon">▣</span><span>Categories</span></a
-        >
-        <a href="reports.html" class="nav-item"
-          ><span class="nav-icon">▤</span><span>Reports</span></a
-        >
-        <div class="menu-title">TOOLS</div>
-        <a href="budgets.html" class="nav-item"
-          ><span class="nav-icon">◫</span><span>Budgets</span></a
-        >
-        <div class="menu-title">SETTINGS</div>
-        <a href="settings.html" class="nav-item"
-          ><span class="nav-icon">⚙</span><span>Settings</span></a
-        >
-      </aside>
-      <main class="main">
-        <header class="header">
-          <div>
-            <div class="eyebrow">SPENDING BREAKDOWN</div>
-            <h1>Categories</h1>
-            <p>
-              Understand where your money goes, compare categories, and spot
-              areas that need attention.
-            </p>
-          </div>
-          <div class="profile">
-            <strong id="catUser">My Account</strong>
-            <div class="profile-circle" id="catInitials">EG</div>
-          </div>
-        </header>
-        <section class="category-hero">
-          <div class="eyebrow">SMART CATEGORY ANALYSIS</div>
-          <h2>Your spending, organised at a glance</h2>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Categories - ExpenseGuard</title>
+  <link rel="stylesheet" href="../css/style.css?v=3" />
+  <link rel="stylesheet" href="../css/evaluation.css?v=3" />
+  <link rel="stylesheet" href="../css/categories.css?v=3" />
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem("expenseGuardTheme") === "light") {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+
+<body class="categories-page">
+  <div class="container">
+    <aside class="sidebar">
+      <div class="logo">Expense<span>Guard</span></div>
+      <div class="menu-title">MAIN MENU</div>
+      <a href="../dashboard.html" class="nav-item"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
+      <a href="transactions.html" class="nav-item"><span class="nav-icon">₹</span><span>Transactions</span></a>
+      <a href="anomalies.html" class="nav-item"><span class="nav-icon">⚠</span><span>Anomalies</span></a>
+      <a href="categories.html" class="nav-item active"><span class="nav-icon">▣</span><span>Categories</span></a>
+      <a href="reports.html" class="nav-item"><span class="nav-icon">▤</span><span>Reports</span></a>
+      <div class="menu-title">TOOLS</div>
+      <a href="budgets.html" class="nav-item"><span class="nav-icon">◫</span><span>Budgets</span></a>
+      <div class="menu-title">SETTINGS</div>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙</span><span>Settings</span></a>
+    </aside>
+    <main class="main">
+      <header class="header">
+        <div>
+          <div class="eyebrow">SPENDING BREAKDOWN</div>
+          <h1>Categories</h1>
           <p>
-            ExpenseGuard groups saved transactions by category using JavaScript
-            objects, <b>map()</b>, <b>filter()</b>, <b>reduce()</b> and
-            <b>sort()</b>.
+            Understand where your money goes, compare categories, and spot
+            areas that need attention.
           </p>
-        </section>
-        <section class="category-summary">
-          <div class="mini-stat">
-            <div class="label">Total Spending</div>
-            <div class="value" id="sumTotal">₹0</div>
-            <div class="hint">Across all categories</div>
-          </div>
-          <div class="mini-stat">
-            <div class="label">Top Category</div>
-            <div class="value" id="sumTop">—</div>
-            <div class="hint" id="sumTopHint">No data yet</div>
-          </div>
-          <div class="mini-stat">
-            <div class="label">Categories Used</div>
-            <div class="value" id="sumCategories">0</div>
-            <div class="hint">Active spending areas</div>
-          </div>
-          <div class="mini-stat">
-            <div class="label">Average / Category</div>
-            <div class="value" id="sumAverage">₹0</div>
-            <div class="hint">Balanced view</div>
-          </div>
-        </section>
-        <div class="category-toolbar">
-          <input id="categorySearch" placeholder="Search category..." /><select
-            id="categorySort"
-          >
-            <option value="amount">Highest spending</option>
-            <option value="count">Most transactions</option>
-            <option value="name">A–Z</option>
-          </select>
         </div>
-        <section id="categoryGrid" class="category-grid"></section>
-        <section class="category-bottom">
-          <div class="distribution-card">
-            <div class="card-header">
-              <div>
-                <h2>Spending distribution</h2>
-                <p>Share of your total spending by category.</p>
-              </div>
-            </div>
-            <div class="distribution-row">
-              <div class="donut" id="donut">
-                <div class="donut-hole">
-                  <strong id="donutTotal">₹0</strong><span>Total</span>
-                </div>
-              </div>
-              <div id="legend" class="legend"></div>
+        <div class="profile">
+          <strong id="catUser">My Account</strong>
+          <div class="profile-circle" id="catInitials">EG</div>
+        </div>
+      </header>
+      <section class="category-hero">
+        <div class="eyebrow">SMART CATEGORY ANALYSIS</div>
+        <h2>Your spending, organised at a glance</h2>
+        <p>
+          ExpenseGuard groups saved transactions by category using JavaScript
+          objects, <b>map()</b>, <b>filter()</b>, <b>reduce()</b> and
+          <b>sort()</b>.
+        </p>
+      </section>
+      <section class="category-summary">
+        <div class="mini-stat">
+          <div class="label">Total Spending</div>
+          <div class="value" id="sumTotal">₹0</div>
+          <div class="hint">Across all categories</div>
+        </div>
+        <div class="mini-stat">
+          <div class="label">Top Category</div>
+          <div class="value" id="sumTop">—</div>
+          <div class="hint" id="sumTopHint">No data yet</div>
+        </div>
+        <div class="mini-stat">
+          <div class="label">Categories Used</div>
+          <div class="value" id="sumCategories">0</div>
+          <div class="hint">Active spending areas</div>
+        </div>
+        <div class="mini-stat">
+          <div class="label">Average / Category</div>
+          <div class="value" id="sumAverage">₹0</div>
+          <div class="hint">Balanced view</div>
+        </div>
+      </section>
+      <div class="category-toolbar">
+        <input id="categorySearch" placeholder="Search category..." /><select id="categorySort">
+          <option value="amount">Highest spending</option>
+          <option value="count">Most transactions</option>
+          <option value="name">A–Z</option>
+        </select>
+      </div>
+      <section id="categoryGrid" class="category-grid"></section>
+      <section class="category-bottom">
+        <div class="distribution-card">
+          <div class="card-header">
+            <div>
+              <h2>Spending distribution</h2>
+              <p>Share of your total spending by category.</p>
             </div>
           </div>
-          <div class="insight-card">
-            <div class="card-header">
-              <div>
-                <h2>Category insights</h2>
-                <p>Quick facts from your saved transactions.</p>
+          <div class="distribution-row">
+            <div class="donut" id="donut">
+              <div class="donut-hole">
+                <strong id="donutTotal">₹0</strong><span>Total</span>
               </div>
             </div>
-            <div id="categoryInsights" class="insight-list"></div>
+            <div id="legend" class="legend"></div>
           </div>
-        </section>
-      </main>
+        </div>
+        <div class="insight-card">
+          <div class="card-header">
+            <div>
+              <h2>Category insights</h2>
+              <p>Quick facts from your saved transactions.</p>
+            </div>
+          </div>
+          <div id="categoryInsights" class="insight-list"></div>
+        </div>
+      </section>
+    </main>
     <!-- =====================================================
          JAVASCRIPT
     ====================================================== -->
     <script src="../javascript/app.js"></script>
     <script src="../javascript/categories.js" defer></script>
-  </body>
+</body>
+
 </html>
