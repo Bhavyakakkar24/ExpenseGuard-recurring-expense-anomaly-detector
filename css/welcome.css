@@ -442,18 +442,32 @@ body {
 
   .welcome-content {
     min-height: 100vh;
-
-    padding: 70px 30px;
+    padding: 70px 24px 40px;
   }
 
   .welcome-logo {
-    left: 30px;
+    left: 24px;
+    top: 24px;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
+  .welcome-content {
+    padding: 65px 16px 30px;
+  }
+
+  .welcome-logo {
+    left: 16px;
+    top: 18px;
+  }
+
   .welcome-text h1 {
-    font-size: 42px;
+    font-size: clamp(28px, 9vw, 38px);
+  }
+
+  .get-started-btn {
+    width: 100%;
+    text-align: center;
   }
 }
 

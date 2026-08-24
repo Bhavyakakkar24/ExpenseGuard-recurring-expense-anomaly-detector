@@ -403,10 +403,141 @@ function initializeProfileDropdown() {
     }); 
   } 
 } 
- 
+
 // ============================================================ 
-// SIGN UP 
+// MOBILE NAVIGATION DRAWER 
 // ============================================================ 
+
+function initializeMobileNav() {
+  const sidebar = document.querySelector(".sidebar");
+  if (!sidebar) return;
+
+  // Create backdrop if not present
+  let backdrop = document.getElementById("sidebarBackdrop");
+  if (!backdrop) {
+    backdrop = document.createElement("div");
+    backdrop.id = "sidebarBackdrop";
+    backdrop.className = "sidebar-backdrop";
+    document.body.appendChild(backdrop);
+  }
+
+  // Create close button in sidebar if not present
+  let closeBtn = document.getElementById("sidebarCloseBtn");
+  if (!closeBtn) {
+    closeBtn = document.createElement("button");
+    closeBtn.id = "sidebarCloseBtn";
+    closeBtn.className = "sidebar-close-btn";
+    closeBtn.type = "button";
+    closeBtn.setAttribute("aria-label", "Close navigation");
+    closeBtn.innerHTML = "&times;";
+    
+    // Insert inside sidebar before or next to logo
+    const logo = sidebar.querySelector(".logo");
+    if (logo) {
+      const headerWrap = document.createElement("div");
+      headerWrap.className = "sidebar-header-row";
+      logo.parentNode.insertBefore(headerWrap, logo);
+      headerWrap.appendChild(logo);
+      headerWrap.appendChild(closeBtn);
+    } else {
+      sidebar.prepend(closeBtn);
+    }
+  }
+
+  function openSidebar() {
+    sidebar.classList.add("mobile-open");
+    document.body.classList.add("sidebar-open");
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove("mobile-open");
+    document.body.classList.remove("sidebar-open");
+  }
+
+  function toggleSidebar() {
+    if (sidebar.classList.contains("mobile-open")) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  }
+
+  // Bind to any mobile menu toggle buttons
+  const menuButtons = document.querySelectorAll(".mobile-menu-btn, #mobileMenuBtn");
+  menuButtons.forEach((btn) => {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSidebar();
+    });
+  });
+
+  // If no menu button found in DOM yet, inject one into .header if present
+  if (menuButtons.length === 0) {
+    const header = document.querySelector(".header");
+    if (header) {
+      const autoBtn = document.createElement("button");
+      autoBtn.className = "mobile-menu-btn";
+      autoBtn.id = "mobileMenuBtn";
+      autoBtn.type = "button";
+      autoBtn.setAttribute("aria-label", "Open menu");
+      autoBtn.innerHTML = "<span>☰</span>";
+      autoBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSidebar();
+      });
+
+      // Insert at the beginning of header or inside a header-left group
+      const firstChild = header.firstElementChild;
+      if (firstChild) {
+        const wrap = document.createElement("div");
+        wrap.className = "header-left-wrap";
+        header.insertBefore(wrap, firstChild);
+        wrap.appendChild(autoBtn);
+        wrap.appendChild(firstChild);
+      } else {
+        header.prepend(autoBtn);
+      }
+    }
+  }
+
+  // Backdrop click closes sidebar
+  backdrop.addEventListener("click", function () {
+    closeSidebar();
+  });
+
+  // Close button click
+  closeBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeSidebar();
+  });
+
+  // Clicking any nav item closes the sidebar on mobile
+  const navItems = sidebar.querySelectorAll(".nav-item");
+  navItems.forEach((item) => {
+    item.addEventListener("click", function () {
+      if (window.innerWidth <= 900) {
+        closeSidebar();
+      }
+    });
+  });
+
+  // ESC key closes sidebar
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && sidebar.classList.contains("mobile-open")) {
+      closeSidebar();
+    }
+  });
+
+  // Resize handler
+  window.addEventListener("resize", function () {
+    if (window.innerWidth > 900 && sidebar.classList.contains("mobile-open")) {
+      closeSidebar();
+    }
+  });
+} 
  
 function initializeSignup() { 
   const signupForm = document.getElementById("signupForm"); 
@@ -1268,6 +1399,9 @@ document.addEventListener("DOMContentLoaded", function () {
   loadProfileInformation(); 
  
   initializeProfileDropdown(); 
+ 
+  // Mobile Navigation 
+  initializeMobileNav(); 
  
   // Transaction form & CSV import 
  

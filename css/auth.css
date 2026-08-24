@@ -426,3 +426,18 @@ html[data-theme="light"] .auth-switch a:hover {
     padding: 30px 24px;
   }
 }
+
+@media (max-width: 480px) {
+  .auth-card-container {
+    padding: 16px 12px;
+  }
+
+  .auth-card {
+    padding: 24px 16px;
+    border-radius: 14px;
+  }
+
+  .auth-card h2 {
+    font-size: 22px;
+  }
+}
