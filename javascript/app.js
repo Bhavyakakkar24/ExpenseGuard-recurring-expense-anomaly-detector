@@ -26,11 +26,49 @@ function applyTheme(theme) {
     if (document.body) document.body.classList.remove("theme-light"); 
   } 
 } 
- 
-// Immediately apply theme 
+
+// ============================================================ 
+// GLOBAL SETTINGS APPLICATION 
+// ============================================================ 
+
+function applySettings() {
+  const showName = localStorage.getItem("expenseGuardSetting_showName") !== "false";
+  const showEmail = localStorage.getItem("expenseGuardSetting_showEmail") !== "false";
+  const motion = localStorage.getItem("expenseGuardSetting_motion") !== "false";
+  const compact = localStorage.getItem("expenseGuardSetting_compact") === "true";
+  const anomalyAlerts = localStorage.getItem("expenseGuardSetting_anomalyAlerts") !== "false";
+  const insights = localStorage.getItem("expenseGuardSetting_insights") !== "false";
+
+  const root = document.documentElement;
+  const body = document.body;
+
+  const toggleClass = (cls, active) => {
+    if (root) root.classList.toggle(cls, active);
+    if (body) body.classList.toggle(cls, active);
+  };
+
+  toggleClass("no-motion", !motion);
+  toggleClass("compact-mode", compact);
+  toggleClass("hide-anomaly-alerts", !anomalyAlerts);
+  toggleClass("hide-insights", !insights);
+  toggleClass("hide-show-name", !showName);
+  toggleClass("hide-show-email", !showEmail);
+
+  if (typeof loadProfileInformation === "function") {
+    loadProfileInformation();
+  }
+}
+
+window.applySettings = applySettings;
+
+// Immediately apply theme and settings 
 applyTheme(); 
+applySettings();
 if (document.readyState === "loading") { 
-  document.addEventListener("DOMContentLoaded", () => applyTheme()); 
+  document.addEventListener("DOMContentLoaded", () => {
+    applyTheme();
+    applySettings();
+  }); 
 } 
  
 // ============================================================ 
@@ -391,9 +429,15 @@ function getPageRedirect(targetInPages) {
  
 function loadProfileInformation() { 
   const user = getCurrentUser(); 
-  const name = user?.name || "My Account"; 
-  const email = user?.email || (user ? "" : "Not signed in"); 
-  const initials = user ? getUserInitials(name) : "EG"; 
+  const showName = localStorage.getItem("expenseGuardSetting_showName") !== "false";
+  const showEmail = localStorage.getItem("expenseGuardSetting_showEmail") !== "false";
+
+  const rawName = user?.name || localStorage.getItem("expenseGuardSetting_name") || "My Account";
+  const rawEmail = user?.email || localStorage.getItem("expenseGuardSetting_email") || (user ? "" : "Not signed in");
+
+  const name = showName ? rawName : "User";
+  const email = showEmail ? rawEmail : "••••@••••.com";
+  const initials = showName ? getUserInitials(rawName) : "EG";
  
   const targets = { 
     profileName: name, 
@@ -414,6 +458,9 @@ function loadProfileInformation() {
     profileTitle: name, 
     profileEmail: email, 
     bigInitials: initials, 
+    previewName: showName ? rawName : "User (Hidden)",
+    previewEmail: showEmail ? rawEmail : "••••@••••.com (Hidden)",
+    previewInitials: initials,
   }; 
  
   Object.entries(targets).forEach(([id, val]) => { 
@@ -1415,43 +1462,23 @@ function initializeTransactionForm() {
 function initializeCsvUpload() { 
   const fileInput = document.getElementById("csvFile"); 
   const uploadBox = document.querySelector(".upload-box"); 
- 
+
   if (!fileInput && !uploadBox) return; 
- 
+
   function parseAndSaveCsv(text) { 
     try { 
-      const lines = text.trim().split(/\r?\n/); 
-      if (lines.length < 2) { 
-        alert("CSV file is empty or missing headers."); 
+      if (!text || !text.trim()) { 
+        alert("Selected CSV file is empty."); 
         return; 
       } 
- 
-      const headers = lines[0] 
-        .split(",") 
-        .map((h) => h.trim().replace(/^["']|["']$/g, "").toLowerCase()); 
-      const dateIdx = headers.findIndex((h) => h.includes("date")); 
-      const descIdx = headers.findIndex((h) => h.includes("desc")); 
-      const catIdx = headers.findIndex((h) => h.includes("cat")); 
-      const amtIdx = headers.findIndex( 
-        (h) => 
-          h.includes("amount") || 
-          h.includes("spend") || 
-          h.includes("price") || 
-          h.includes("cost"), 
-      ); 
- 
-      if (dateIdx === -1 || descIdx === -1 || amtIdx === -1) { 
-        alert("CSV must contain Date, Description, and Amount columns."); 
+
+      const lines = text.trim().split(/\r?\n/).filter((l) => l.trim().length > 0); 
+      if (lines.length === 0) { 
+        alert("CSV file contains no data."); 
         return; 
       } 
- 
-      const existing = getTransactions(); 
-      let importedCount = 0; 
- 
-      for (let i = 1; i < lines.length; i++) { 
-        const line = lines[i].trim(); 
-        if (!line) continue; 
- 
+
+      function parseCsvLine(line) { 
         const cols = []; 
         let current = ""; 
         let inQuotes = false; 
@@ -1467,18 +1494,78 @@ function initializeCsvUpload() {
           } 
         } 
         cols.push(current.trim().replace(/^["']|["']$/g, "")); 
- 
-        const date = cols[dateIdx] || new Date().toISOString().slice(0, 10); 
-        const description = cols[descIdx] || "Imported expense"; 
-        const category = 
-          catIdx >= 0 && cols[catIdx] ? cols[catIdx] : "Other"; 
-        const amount = Number( 
-          String(cols[amtIdx] || "").replace(/[^0-9.-]+/g, ""), 
-        ); 
- 
+        return cols; 
+      } 
+
+      const firstRowCols = parseCsvLine(lines[0]); 
+      const lowerHeaders = firstRowCols.map((h) => h.toLowerCase()); 
+
+      let dateIdx = lowerHeaders.findIndex((h) => h.includes("date") || h.includes("time") || h.includes("day")); 
+      let descIdx = lowerHeaders.findIndex((h) => h.includes("desc") || h.includes("item") || h.includes("name") || h.includes("title") || h.includes("particular") || h.includes("detail") || h.includes("payee") || h.includes("note") || h.includes("trans")); 
+      let catIdx = lowerHeaders.findIndex((h) => h.includes("cat") || h.includes("type") || h.includes("group") || h.includes("tag")); 
+      let amtIdx = lowerHeaders.findIndex((h) => h.includes("amount") || h.includes("spend") || h.includes("price") || h.includes("cost") || h.includes("val") || h.includes("rs") || h.includes("inr") || h.includes("total") || h.includes("sum")); 
+
+      let startLine = 1; 
+
+      if (dateIdx === -1 && descIdx === -1 && amtIdx === -1) { 
+        const hasNumberInFirst = firstRowCols.some((c) => !isNaN(Number(c.replace(/[^0-9.-]+/g, ""))) && Number(c.replace(/[^0-9.-]+/g, "")) > 0); 
+        if (!hasNumberInFirst) { 
+          dateIdx = 0; 
+          descIdx = 1; 
+          catIdx = 2; 
+          amtIdx = 3; 
+          startLine = 1; 
+        } else { 
+          dateIdx = 0; 
+          descIdx = 1; 
+          catIdx = 2; 
+          amtIdx = 3; 
+          startLine = 0; 
+        } 
+      } else { 
+        if (dateIdx === -1) dateIdx = 0; 
+        if (descIdx === -1) descIdx = 1; 
+        if (amtIdx === -1) amtIdx = firstRowCols.length > 3 ? 3 : firstRowCols.length > 2 ? 2 : 1; 
+        if (catIdx === -1) catIdx = firstRowCols.length > 2 && catIdx !== dateIdx && catIdx !== descIdx && catIdx !== amtIdx ? 2 : -1; 
+      } 
+
+      const existing = getTransactions(); 
+      let importedCount = 0; 
+
+      for (let i = startLine; i < lines.length; i++) { 
+        const cols = parseCsvLine(lines[i]); 
+        if (cols.length === 0) continue; 
+
+        let date = cols[dateIdx] ? cols[dateIdx].trim() : ""; 
+        if (!date || isNaN(new Date(date).getTime())) { 
+          date = new Date().toISOString().slice(0, 10); 
+        } else { 
+          try { 
+            date = new Date(date).toISOString().slice(0, 10); 
+          } catch (e) { 
+            date = new Date().toISOString().slice(0, 10); 
+          } 
+        } 
+
+        const description = cols[descIdx] ? cols[descIdx].trim() : "Imported Expense"; 
+        const category = catIdx >= 0 && cols[catIdx] && cols[catIdx].trim() ? cols[catIdx].trim() : "Other"; 
+
+        let rawAmt = cols[amtIdx] || ""; 
+        let amount = Number(String(rawAmt).replace(/[^0-9.-]+/g, "")); 
+
+        if (!Number.isFinite(amount) || amount <= 0) { 
+          for (let c = 0; c < cols.length; c++) { 
+            const tryVal = Number(String(cols[c]).replace(/[^0-9.-]+/g, "")); 
+            if (Number.isFinite(tryVal) && tryVal > 0 && c !== dateIdx && c !== descIdx) { 
+              amount = tryVal; 
+              break; 
+            } 
+          } 
+        } 
+
         if (Number.isFinite(amount) && amount > 0) { 
           existing.push({ 
-            id: Date.now() + i, 
+            id: "tx_csv_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5), 
             date: date, 
             category: category, 
             description: description, 
@@ -1487,22 +1574,30 @@ function initializeCsvUpload() {
           importedCount++; 
         } 
       } 
- 
+
       if (importedCount > 0) { 
         saveTransactions(existing); 
-        updateDashboard(); 
-        alert( 
-          `Successfully imported ${importedCount} transaction${importedCount === 1 ? "" : "s"}!`, 
-        ); 
+        if (typeof updateDashboard === "function") updateDashboard(); 
+        if (typeof renderTransactions === "function") renderTransactions(); 
+        alert(`Successfully imported ${importedCount} transaction${importedCount === 1 ? "" : "s"} from CSV!`); 
       } else { 
-        alert("No valid transactions found in CSV."); 
+        alert("No valid transactions found in CSV file."); 
       } 
     } catch (err) { 
       console.error("CSV import error:", err); 
       alert("Failed to parse CSV file."); 
     } 
   } 
- 
+
+  if (uploadBox && fileInput) { 
+    uploadBox.style.cursor = "pointer"; 
+    uploadBox.addEventListener("click", function (e) { 
+      if (e.target !== fileInput && !e.target.classList.contains("csv-label")) { 
+        fileInput.click(); 
+      } 
+    }); 
+  } 
+
   if (fileInput) { 
     fileInput.addEventListener("change", function (e) { 
       const file = e.target.files && e.target.files[0]; 
@@ -1515,22 +1610,34 @@ function initializeCsvUpload() {
       reader.readAsText(file); 
     }); 
   } 
- 
+
   if (uploadBox) { 
-    uploadBox.addEventListener("dragover", function (e) { 
-      e.preventDefault(); 
-      uploadBox.style.borderColor = "var(--teal, #27d3bd)"; 
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => { 
+      uploadBox.addEventListener(eventName, (e) => { 
+        e.preventDefault(); 
+        e.stopPropagation(); 
+      }, false); 
     }); 
- 
-    uploadBox.addEventListener("dragleave", function () { 
-      uploadBox.style.borderColor = ""; 
+
+    ["dragenter", "dragover"].forEach((eventName) => { 
+      uploadBox.addEventListener(eventName, () => { 
+        uploadBox.style.borderColor = "#2563eb"; 
+        uploadBox.style.background = "rgba(37, 99, 235, 0.1)"; 
+      }, false); 
     }); 
- 
+
+    ["dragleave", "drop"].forEach((eventName) => { 
+      uploadBox.addEventListener(eventName, () => { 
+        uploadBox.style.borderColor = ""; 
+        uploadBox.style.background = ""; 
+      }, false); 
+    }); 
+
     uploadBox.addEventListener("drop", function (e) { 
-      e.preventDefault(); 
-      uploadBox.style.borderColor = ""; 
-      const file = e.dataTransfer.files && e.dataTransfer.files[0]; 
-      if (file) { 
+      const dt = e.dataTransfer; 
+      const files = dt && dt.files; 
+      if (files && files.length > 0) { 
+        const file = files[0]; 
         const reader = new FileReader(); 
         reader.onload = function (evt) { 
           parseAndSaveCsv(evt.target.result); 
@@ -1689,12 +1796,15 @@ function deleteTransaction(transactionId) {
     return;
   }
 
-  const confirmed = confirm(
-    "Are you sure you want to delete this transaction?",
-  );
+  const shouldConfirm = localStorage.getItem("expenseGuardSetting_confirmDelete") !== "false";
+  if (shouldConfirm) {
+    const confirmed = confirm(
+      "Are you sure you want to delete this transaction?",
+    );
 
-  if (!confirmed) {
-    return;
+    if (!confirmed) {
+      return;
+    }
   }
 
   const stored = localStorage.getItem(STORAGE_KEY);
