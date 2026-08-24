@@ -305,7 +305,7 @@ body {
   color: #111827;
 }
 
-.visual-card > p {
+.visual-card>p {
   margin-top: 5px;
 
   color: #94a3b8;
@@ -407,7 +407,7 @@ body {
   color: #dc2626;
 }
 
-.floating-card > div {
+.floating-card>div {
   display: flex;
 
   flex-direction: column;
@@ -486,11 +486,9 @@ body::after {
 
   z-index: 99999;
 
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(37, 99, 235, 0.16),
-    transparent 45%
-  );
+  background: radial-gradient(circle at 50% 50%,
+      rgba(37, 99, 235, 0.16),
+      transparent 45%);
 
   opacity: 0;
 
@@ -590,6 +588,7 @@ body.page-leaving::after {
 }
 
 @keyframes dashboardFloat {
+
   0%,
   100% {
     transform: translateY(0);
@@ -601,6 +600,7 @@ body.page-leaving::after {
 }
 
 @keyframes floatingNotification {
+
   0%,
   100% {
     transform: translateY(0);
@@ -633,6 +633,7 @@ body.page-leaving::after {
 ============================================================ */
 
 @media (max-width: 700px) {
+
   .welcome-content,
   .welcome-visual {
     animation: welcomeMobileEnter 0.7s ease both;
