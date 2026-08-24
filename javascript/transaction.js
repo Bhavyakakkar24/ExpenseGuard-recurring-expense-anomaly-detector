@@ -315,12 +315,15 @@
       return;
     }
 
-    const confirmed = confirm(
-      "Are you sure you want to delete this transaction?",
-    );
+    const shouldConfirm = localStorage.getItem("expenseGuardSetting_confirmDelete") !== "false";
+    if (shouldConfirm) {
+      const confirmed = confirm(
+        "Are you sure you want to delete this transaction?",
+      );
 
-    if (!confirmed) {
-      return;
+      if (!confirmed) {
+        return;
+      }
     }
 
     const transactions = getTransactions();
