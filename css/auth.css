@@ -379,6 +379,34 @@ body {
   text-decoration: underline;
 }
 
+.auth-admin-footer {
+  text-align: center;
+  margin-top: 14px;
+}
+
+.auth-admin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted, #627b9b);
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: rgba(30, 58, 95, 0.25);
+  border: 1px dashed rgba(79, 124, 255, 0.25);
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+}
+
+.auth-admin-link:hover {
+  color: var(--teal, #27d3bd);
+  background: rgba(39, 211, 189, 0.1);
+  border-color: var(--teal, #27d3bd);
+  transform: translateY(-1px);
+}
+
 /* ============================================================
    LIGHT THEME OVERRIDES FOR AUTH
 ============================================================ */

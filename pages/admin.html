@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Console — ExpenseGuard</title>
+    <link rel="stylesheet" href="../css/style.css?v=5" />
+    <link rel="stylesheet" href="../css/evaluation.css?v=5" />
+    <link rel="stylesheet" href="../css/admin.css?v=5" />
+  </head>
+
+  <body class="admin-body">
+    <div class="container admin-container">
+      <!-- =====================================================
+           STANDALONE ADMIN SIDEBAR (3 ITEMS ONLY)
+      ====================================================== -->
+      <aside class="sidebar admin-sidebar">
+        <div class="sidebar-header-row">
+          <div class="logo">
+            Expense<span>Guard</span>
+            <span class="admin-sidebar-badge">ADMIN</span>
+          </div>
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Close navigation"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="menu-title">ADMIN CONTROL</div>
+
+        <!-- Tab 1: Analytics Overview -->
+        <a href="#overview" class="nav-item admin-nav-item active" id="navOverview" data-tab="overview">
+          <span class="nav-icon">📊</span>
+          <span>Analytics Overview</span>
+        </a>
+
+        <!-- Tab 2: Admin Settings -->
+        <a href="#settings" class="nav-item admin-nav-item" id="navSettings" data-tab="settings">
+          <span class="nav-icon">⚙️</span>
+          <span>Admin Settings</span>
+        </a>
+
+        <div class="menu-title">SESSION</div>
+
+        <!-- Item 3: Logout -->
+        <a href="admin-login.html" class="nav-item admin-nav-item logout-link" id="navLogout">
+          <span class="nav-icon">🚪</span>
+          <span>Logout</span>
+        </a>
+
+        <div class="admin-sidebar-footer">
+          <div class="admin-system-chip">
+            <span class="chip-dot"></span>
+            <div>
+              <div class="chip-title">Platform Telemetry</div>
+              <div class="chip-sub">Production v2.4.0 — Secure</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- =====================================================
+           MAIN CONTENT AREA
+      ====================================================== -->
+      <main class="main admin-main">
+        <!-- ADMIN HEADER -->
+        <header class="header admin-header">
+          <div class="header-left-wrap">
+            <button
+              class="mobile-menu-btn"
+              id="mobileMenuBtn"
+              aria-label="Open Navigation"
+            >
+              ☰
+            </button>
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <h1 id="adminPageHeading">Analytics Overview</h1>
+                <span class="admin-badge live">Admin Session Active</span>
+              </div>
+              <p id="adminPageSubheading">Platform telemetry, real-time dynamic analytics & registered user directory</p>
+            </div>
+          </div>
+
+          <div class="admin-header-actions">
+            <!-- Theme Toggle Button -->
+            <button type="button" class="admin-theme-btn" id="adminThemeToggle" title="Toggle Light/Navy Theme" aria-label="Toggle Theme">
+              <span class="theme-icon" id="themeIcon">🌓</span>
+              <span class="theme-text" id="themeText">Theme</span>
+            </button>
+
+            <!-- Sign Out Button -->
+            <button type="button" class="btn-secondary" id="adminHeaderLogoutBtn" style="padding: 8px 14px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+              <span>🚪 Sign Out</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="content" style="padding: 24px;">
+          <!-- =====================================================
+               TAB PANEL 1: ANALYTICS OVERVIEW
+          ====================================================== -->
+          <div class="admin-tab-panel active" id="panelOverview">
+            <!-- SECTION 1: DYNAMIC ANALYTICS OVERVIEW -->
+            <section class="admin-section">
+              <div class="admin-section-head">
+                <div class="admin-section-title">
+                  <h2>
+                    <span>📈</span> Analytics Overview
+                  </h2>
+                  <p>Dynamic platform metrics computed directly from database volume and live engagement</p>
+                </div>
+
+                <div>
+                  <button id="loadDemoAnalytics" class="admin-btn-primary" type="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                    <span>Load Demo Analytics</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- DYNAMIC STAT CARDS GRID -->
+              <div class="admin-stats-grid">
+                <!-- 1. Total Users -->
+                <div class="admin-stat-card">
+                  <div class="admin-stat-top">
+                    <span class="admin-stat-label">Total Users</span>
+                    <div class="admin-stat-icon users-icon">👥</div>
+                  </div>
+                  <div class="admin-stat-val" id="statTotalUsers">0</div>
+                  <div class="admin-stat-sub"><code>expenseGuardUsers.length</code></div>
+                </div>
+
+                <!-- 2. Total Page Views -->
+                <div class="admin-stat-card">
+                  <div class="admin-stat-top">
+                    <span class="admin-stat-label">Total Page Views</span>
+                    <div class="admin-stat-icon views-icon">📊</div>
+                  </div>
+                  <div class="admin-stat-val" id="statPageViews">0</div>
+                  <div class="admin-stat-sub"><code>Users × 42 views/user</code></div>
+                </div>
+
+                <!-- 3. Active Sessions -->
+                <div class="admin-stat-card">
+                  <div class="admin-stat-top">
+                    <span class="admin-stat-label">Active Sessions</span>
+                    <div class="admin-stat-icon sessions-icon">🟢</div>
+                  </div>
+                  <div class="admin-stat-val" id="statActiveSessions">0</div>
+                  <div class="admin-stat-sub"><code>Math.floor(Users / 3)</code></div>
+                </div>
+
+                <!-- 4. Detected Anomalies -->
+                <div class="admin-stat-card anomalies-card">
+                  <div class="admin-stat-top">
+                    <span class="admin-stat-label">Detected Anomalies</span>
+                    <div class="admin-stat-icon anomalies-icon">⚠️</div>
+                  </div>
+                  <div class="admin-stat-val" id="statDetectedAnomalies">0</div>
+                  <div class="admin-stat-sub"><code>Users × 2 flagged</code></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- SECTION 2: REGISTERED USERS DIRECTORY -->
+            <section class="admin-section">
+              <div class="admin-section-head">
+                <div class="admin-section-title">
+                  <h2>
+                    <span>👥</span> Registered Users
+                  </h2>
+                  <p>Accounts in browser localStorage (showing real registrations + injected presentation users)</p>
+                </div>
+
+                <div>
+                  <span id="userCountBadge" class="admin-badge">0 Users</span>
+                </div>
+              </div>
+
+              <!-- TABLE CONTAINER -->
+              <div class="admin-table-wrapper">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Account Created Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminUsersTableBody">
+                    <tr>
+                      <td colspan="3" class="table-empty-state">
+                        Loading users...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <!-- =====================================================
+               TAB PANEL 2: ADMIN SETTINGS & DATA CLEARING
+          ====================================================== -->
+          <div class="admin-tab-panel" id="panelSettings">
+            <section class="admin-section">
+              <div class="admin-section-head">
+                <div class="admin-section-title">
+                  <h2>
+                    <span>🛠️</span> Demo Data & Storage Management
+                  </h2>
+                  <p>Reset presentation demo records, purge fake profiles, and manage local storage</p>
+                </div>
+              </div>
+
+              <div class="admin-settings-box danger-zone">
+                <div class="settings-box-info">
+                  <div class="settings-box-icon">🗑️</div>
+                  <div>
+                    <h3 class="settings-box-title">Clear Demo Data & Users</h3>
+                    <p class="settings-box-desc">Removes all 15 injected demo user objects from <code>expenseGuardUsers</code> in localStorage, resets dynamic stat cards to baseline, and clears the table.</p>
+                  </div>
+                </div>
+
+                <div class="settings-box-action">
+                  <button type="button" id="clearDemoDataBtn" class="admin-btn-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    <span>Clear Demo Data & Users</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- SYSTEM STATUS & CREDENTIALS INFO -->
+            <section class="admin-section">
+              <div class="admin-section-head">
+                <div class="admin-section-title">
+                  <h2>
+                    <span>🔒</span> Security & Access Configuration
+                  </h2>
+                  <p>System credentials and environment access configuration</p>
+                </div>
+              </div>
+
+              <div class="admin-config-grid">
+                <div class="config-card">
+                  <div class="config-card-title">Admin Access Key</div>
+                  <div class="config-card-value"><code>admin / admin123</code></div>
+                  <div class="config-card-desc">Required to unlock this Admin Dashboard from the sign-in screen.</div>
+                </div>
+
+                <div class="config-card">
+                  <div class="config-card-title">Session State</div>
+                  <div class="config-card-value" id="sessionStatusText">Authenticated (Session Storage)</div>
+                  <div class="config-card-desc">Session terminates automatically when clicking Logout or closing tab.</div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="../javascript/app.js"></script>
+    <script src="../javascript/admin.js"></script>
+  </body>
+</html>
