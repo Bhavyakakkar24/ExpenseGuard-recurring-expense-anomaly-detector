@@ -131,23 +131,51 @@ function getUserInitials(name) {
 // TRANSACTION STORAGE 
 // ============================================================ 
  
+function getTransactionStorageKey() {
+  try {
+    const user = getCurrentUser();
+    if (user && user.email) {
+      return "expenseGuardTransactions_" + user.email.toLowerCase().trim();
+    }
+  } catch (e) {}
+  return STORAGE_KEY;
+}
+
 function getTransactions() { 
-  const data = localStorage.getItem(STORAGE_KEY); 
+  const userKey = getTransactionStorageKey();
+  const data = localStorage.getItem(userKey); 
  
-  if (!data) { 
-    return []; 
+  if (data !== null) { 
+    try { 
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch (error) { 
+      console.error("Error reading transactions:", error); 
+      return []; 
+    } 
   } 
+
+  // Legacy fallback if user key was not explicitly initialized
+  if (userKey !== STORAGE_KEY) {
+    const globalData = localStorage.getItem(STORAGE_KEY);
+    if (globalData !== null) {
+      try {
+        const parsedGlobal = JSON.parse(globalData);
+        if (Array.isArray(parsedGlobal)) {
+          return parsedGlobal;
+        }
+      } catch (e) {}
+    }
+  }
  
-  try { 
-    return JSON.parse(data); 
-  } catch (error) { 
-    console.error("Error reading transactions:", error); 
- 
-    return []; 
-  } 
+  return []; 
 } 
  
 function saveTransactions(transactions) { 
+  const userKey = getTransactionStorageKey();
+  localStorage.setItem(userKey, JSON.stringify(transactions)); 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions)); 
 } 
  
@@ -854,11 +882,19 @@ function initializeSignup() {
       email: email, 
  
       password: password, 
+
+      createdAt: new Date().toISOString().slice(0, 10),
     }; 
  
     users.push(newUser); 
  
     saveUsers(users); 
+
+    // Explicitly initialize empty transactions for newly registered user
+    localStorage.setItem(
+      "expenseGuardTransactions_" + email.toLowerCase().trim(),
+      JSON.stringify([]),
+    );
  
     // ------------------------------------------------ 
     // IMPORTANT: 

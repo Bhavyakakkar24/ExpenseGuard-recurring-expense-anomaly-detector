@@ -16,24 +16,47 @@
   // GET TRANSACTIONS
   // ========================================================
 
-  function getTransactions() {
+  function getUserStorageKey() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const rawUser = localStorage.getItem("expenseGuardCurrentUser");
+      if (rawUser) {
+        const u = JSON.parse(rawUser);
+        if (u && u.email) {
+          return "expenseGuardTransactions_" + u.email.toLowerCase().trim();
+        }
+      }
+    } catch (e) {}
+    return STORAGE_KEY;
+  }
 
-      if (!stored) {
-        return [];
+  function getTransactions() {
+    if (typeof window.getTransactions === "function" && window.getTransactions !== getTransactions) {
+      return window.getTransactions();
+    }
+    try {
+      const key = getUserStorageKey();
+      const stored = localStorage.getItem(key);
+
+      if (stored !== null) {
+        const data = JSON.parse(stored);
+        if (Array.isArray(data)) {
+          return data;
+        }
       }
 
-      const data = JSON.parse(stored);
-
-      if (!Array.isArray(data)) {
-        return [];
+      if (key !== STORAGE_KEY) {
+        const globalStored = localStorage.getItem(STORAGE_KEY);
+        if (globalStored !== null) {
+          const globalData = JSON.parse(globalStored);
+          if (Array.isArray(globalData)) {
+            return globalData;
+          }
+        }
       }
 
-      return data;
+      return [];
     } catch (error) {
       console.error("Could not read transactions:", error);
-
       return [];
     }
   }
@@ -43,13 +66,16 @@
   // ========================================================
 
   function saveTransactions(transactions) {
+    if (typeof window.saveTransactions === "function" && window.saveTransactions !== saveTransactions) {
+      return window.saveTransactions(transactions);
+    }
     try {
+      const key = getUserStorageKey();
+      localStorage.setItem(key, JSON.stringify(transactions));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
-
       return true;
     } catch (error) {
       console.error("Could not save transactions:", error);
-
       return false;
     }
   }
