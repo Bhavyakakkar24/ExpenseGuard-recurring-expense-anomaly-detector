@@ -2,119 +2,451 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>ExpenseGuard - Welcome</title>
-
-    <link rel="stylesheet" href="../css/welcome.css" />
-
-    <link rel="stylesheet" href="../css/evaluation.css" />
+    <title>ExpenseGuard — Smart Recurring Expense & Anomaly Detector</title>
+    <link rel="stylesheet" href="../css/welcome.css?v=7" />
+    <link rel="stylesheet" href="../css/evaluation.css?v=7" />
+    <link rel="stylesheet" href="../css/landing.css?v=7" />
   </head>
 
-  <body>
-    <div class="welcome-page">
-      <!-- LEFT SIDE -->
+  <body class="landing-body">
+    <!-- =====================================================
+         HERO SECTION (DARK NAVY UNIFIED DESIGN)
+    ====================================================== -->
+    <section id="hero" class="hero-section">
+      <div class="welcome-page">
+        <!-- LEFT SIDE -->
+        <div class="welcome-content">
+          <div class="welcome-logo">Expense<span>Guard</span></div>
 
-      <div class="welcome-content">
-        <div class="welcome-logo">Expense<span>Guard</span></div>
+          <div class="welcome-text">
+            <p class="small-title">SMART EXPENSE MANAGEMENT</p>
 
-        <div class="welcome-text">
-          <p class="small-title">SMART EXPENSE MANAGEMENT</p>
+            <h1>
+              Welcome to<br />
+              <span>ExpenseGuard</span>
+            </h1>
 
-          <h1>
-            Welcome to
-            <span>ExpenseGuard</span>
-          </h1>
+            <p class="description">
+              Take control of your spending, track your recurring expenses and detect
+              unusual transactions with statistical precision.
+            </p>
 
-          <p class="description">
-            Take control of your spending, track your expenses and detect
-            unusual transactions with ease.
-          </p>
+            <div class="features">
+              <div class="feature">
+                <span>✓</span>
+                Track your recurring expenses
+              </div>
 
-          <div class="features">
-            <div class="feature">
-              <span>✓</span>
-              Track your expenses
+              <div class="feature">
+                <span>✓</span>
+                Analyze category spending patterns
+              </div>
+
+              <div class="feature">
+                <span>✓</span>
+                Detect statistical spending anomalies
+              </div>
             </div>
 
-            <div class="feature">
-              <span>✓</span>
-              Analyze spending patterns
+            <a href="signup.html" class="get-started-btn">
+              <span>Get Started →</span>
+            </a>
+
+            <p class="signin-text">
+              Already have an account?
+              <a href="signin.html">Sign In</a>
+            </p>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="welcome-visual">
+          <div class="visual-card" id="heroVisualCard">
+            <div class="visual-header">
+              <span>Expense Overview</span>
+              <span class="green-dot">● LIVE ENGINE</span>
             </div>
 
-            <div class="feature">
-              <span>✓</span>
-              Detect spending anomalies
+            <div class="visual-amount">₹24,850</div>
+            <p>Total monitored monthly spending</p>
+
+            <div class="fake-chart">
+              <div style="height: 35%" title="Utilities: ₹1,250"></div>
+              <div style="height: 55%" title="Groceries: ₹4,500"></div>
+              <div style="height: 40%" title="Dining: ₹2,100"></div>
+              <div style="height: 75%" title="Subscriptions: ₹3,200"></div>
+              <div style="height: 50%" title="Shopping: ₹3,800"></div>
+              <div style="height: 90%" title="Spike Flagged: ₹15,500"></div>
+              <div style="height: 65%" title="Transportation: ₹2,400"></div>
+            </div>
+
+            <div class="visual-stats">
+              <div>
+                <strong>42</strong>
+                <span>Transactions</span>
+              </div>
+
+              <div>
+                <strong style="color: #fbbf24;">3</strong>
+                <span>Anomalies</span>
+              </div>
+
+              <div>
+                <strong>₹592</strong>
+                <span>Average</span>
+              </div>
             </div>
           </div>
 
-          <a href="signup.html" class="get-started-btn"> Get Started → </a>
-
-          <p class="signin-text">
-            Already have an account?
-
-            <a href="signin.html"> Sign In </a>
-          </p>
+          <div class="floating-card">
+            ⚠️
+            <div>
+              <strong>Anomaly Detected</strong>
+              <span>Unusual spending spike found</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- RIGHT SIDE -->
+      <!-- Scroll Indicator -->
+      <a href="#about-site" class="hero-scroll-indicator" aria-label="Scroll to features">
+        <span class="mouse-icon">
+          <span class="mouse-dot"></span>
+        </span>
+        <span>Explore Features</span>
+      </a>
+    </section>
 
-      <div class="welcome-visual">
-        <div class="visual-card">
-          <div class="visual-header">
-            <span> Expense Overview </span>
+    <!-- LIGHTING DIVIDER -->
+    <div class="lighting-divider"></div>
 
-            <span class="green-dot"> ● </span>
-          </div>
-
-          <div class="visual-amount">₹24,850</div>
-
-          <p>Total spending</p>
-
-          <div class="fake-chart">
-            <div style="height: 35%"></div>
-            <div style="height: 55%"></div>
-            <div style="height: 40%"></div>
-            <div style="height: 75%"></div>
-            <div style="height: 50%"></div>
-            <div style="height: 90%"></div>
-            <div style="height: 65%"></div>
-          </div>
-
-          <div class="visual-stats">
-            <div>
-              <strong> 42 </strong>
-
-              <span> Transactions </span>
-            </div>
-
-            <div>
-              <strong> 3 </strong>
-
-              <span> Anomalies </span>
-            </div>
-
-            <div>
-              <strong> ₹592 </strong>
-
-              <span> Average </span>
-            </div>
-          </div>
+    <!-- =====================================================
+         ABOUT THE SITE SECTION (CORE FEATURES)
+    ====================================================== -->
+    <section id="about-site" class="landing-section">
+      <div class="section-container">
+        <div class="section-header scroll-hidden">
+          <div class="section-badge">✨ CORE CAPABILITIES</div>
+          <h2>Next-Generation <span>Expense Intelligence</span></h2>
+          <p>
+            ExpenseGuard combines automated expense tracking with continuous statistical anomaly detection to protect your budget in real time.
+          </p>
         </div>
 
-        <div class="floating-card">
-          ⚠
+        <div class="features-grid">
+          <!-- Feature 1: Statistical Outliers -->
+          <div class="feature-card scroll-hidden delay-1">
+            <div class="feature-icon-wrapper">📈</div>
+            <h3>Statistical Outlier Engine</h3>
+            <p>
+              Calculates Category Mean and Standard Deviation to score every transaction with a verified Z-score and Pattern Ratio, automatically highlighting High & Medium risk spikes.
+            </p>
+            <div class="feature-tag">⚡ Z-Score & Pattern Ratio Math</div>
+          </div>
 
-          <div>
-            <strong> Anomaly Detected </strong>
+          <!-- Feature 2: Recurring Expenses -->
+          <div class="feature-card scroll-hidden delay-2">
+            <div class="feature-icon-wrapper">🔄</div>
+            <h3>Recurring Expense Interceptor</h3>
+            <p>
+              Tracks regular monthly bills, utilities, and subscriptions. Instantly catches silent price increases, double billings, and sneaky trial expirations.
+            </p>
+            <div class="feature-tag">🛡️ Subscription Creep Defense</div>
+          </div>
 
-            <span> Unusual spending found </span>
+          <!-- Feature 3: Zero-Knowledge Storage -->
+          <div class="feature-card scroll-hidden delay-3">
+            <div class="feature-icon-wrapper">🔒</div>
+            <h3>Zero-Knowledge Local Storage</h3>
+            <p>
+              Your sensitive financial records stay 100% on your device. Zero external cloud tracking, zero data scraping, and isolated per-user account profiles.
+            </p>
+            <div class="feature-tag">🔐 100% Private & Client-Side</div>
+          </div>
+
+          <!-- Feature 4: Budget Limits -->
+          <div class="feature-card scroll-hidden delay-1">
+            <div class="feature-icon-wrapper">🎯</div>
+            <h3>Dynamic Category Budgets</h3>
+            <p>
+              Set flexible category spending caps with visual progress meters and automated threshold warnings before your budget is exceeded.
+            </p>
+            <div class="feature-tag">📊 Real-Time Spending Gauges</div>
+          </div>
+
+          <!-- Feature 5: CSV Ingestion -->
+          <div class="feature-card scroll-hidden delay-2">
+            <div class="feature-icon-wrapper">📑</div>
+            <h3>Universal CSV Statement Import</h3>
+            <p>
+              Drag and drop your bank CSV statements. Intelligent header parsing automatically maps date, description, category, and monetary amounts into your ledger.
+            </p>
+            <div class="feature-tag">⚡ 1-Click Statement Parsing</div>
+          </div>
+
+          <!-- Feature 6: Anomaly Center -->
+          <div class="feature-card scroll-hidden delay-3">
+            <div class="feature-icon-wrapper">🚨</div>
+            <h3>Dedicated Anomaly Center</h3>
+            <p>
+              Review flagged unusual transactions in a centralized hub with transparent mathematical breakdowns explaining exactly why each anomaly was intercepted.
+            </p>
+            <div class="feature-tag">🔍 Transparent Math Explanations</div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- LIGHTING DIVIDER -->
+    <div class="lighting-divider"></div>
+
+    <!-- =====================================================
+         HOW IT WORKS SECTION
+    ====================================================== -->
+    <section id="how-it-works" class="landing-section dark-alt">
+      <div class="section-container">
+        <div class="section-header scroll-hidden">
+          <div class="section-badge">⚙️ WORKFLOW</div>
+          <h2>How ExpenseGuard <span>Protects You</span></h2>
+          <p>
+            Three seamless steps to achieve total financial transparency and bulletproof expense monitoring.
+          </p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card scroll-hidden delay-1">
+            <div class="step-number">01</div>
+            <div class="step-icon">💳</div>
+            <h3>1. Log or Import Expenses</h3>
+            <p>
+              Quickly enter transactions through the fast-entry ledger or drop monthly bank CSV statements for instant batch processing.
+            </p>
+          </div>
+
+          <div class="step-card scroll-hidden delay-2">
+            <div class="step-number">02</div>
+            <div class="step-icon">🧮</div>
+            <h3>2. Continuous Statistical Analysis</h3>
+            <p>
+              The centralized mathematical engine groups transactions by category, calculating baseline means, standard deviations, and risk thresholds.
+            </p>
+          </div>
+
+          <div class="step-card scroll-hidden delay-3">
+            <div class="step-number">03</div>
+            <div class="step-icon">⚠️</div>
+            <h3>3. Real-Time Anomaly Interception</h3>
+            <p>
+              Transactions deviating from your regular spending habits ($Z \ge 2.6$ or Ratio $\ge 3.0$) are instantly flagged in your dashboard and Anomaly Center.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIGHTING DIVIDER -->
+    <div class="lighting-divider"></div>
+
+    <!-- =====================================================
+         ABOUT US / OUR MISSION SECTION
+    ====================================================== -->
+    <section id="about-us" class="landing-section">
+      <div class="section-container">
+        <div class="mission-box scroll-hidden">
+          <div class="mission-text">
+            <div class="section-badge">🛡️ OUR MISSION</div>
+            <h2>Built to protect your budget from hidden leaks and subscription traps.</h2>
+            <p>
+              In a digital world filled with recurring auto-renewals, fluctuating utility charges, and unannounced subscription hikes, standard budgeting apps only tell you where your money went after it is gone.
+            </p>
+            <p>
+              ExpenseGuard was engineered to change that. By pairing modern web performance with rigorous statistical algorithms, we empower you with early warnings before minor spending spikes compound into major financial leaks.
+            </p>
+          </div>
+
+          <div class="mission-stats">
+            <div class="mission-stat-item">
+              <div class="mission-stat-icon">🔐</div>
+              <div>
+                <div class="mission-stat-val">100% Client-Side</div>
+                <div class="mission-stat-sub">Zero cloud tracking or server data collection</div>
+              </div>
+            </div>
+
+            <div class="mission-stat-item">
+              <div class="mission-stat-icon">⚡</div>
+              <div>
+                <div class="mission-stat-val">&lt; 10ms Latency</div>
+                <div class="mission-stat-sub">Instantaneous client-side statistical computation</div>
+              </div>
+            </div>
+
+            <div class="mission-stat-item">
+              <div class="mission-stat-icon">🎯</div>
+              <div>
+                <div class="mission-stat-val">Dual-Metric Filter</div>
+                <div class="mission-stat-sub">Z-Score standard deviation + Pattern deviation ratio</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIGHTING DIVIDER -->
+    <div class="lighting-divider"></div>
+
+    <!-- =====================================================
+         CALL TO ACTION SECTION
+    ====================================================== -->
+    <section class="landing-cta-section">
+      <div class="section-container">
+        <div class="cta-banner scroll-hidden">
+          <h2>Take control of your spending today.</h2>
+          <p>
+            Join ExpenseGuard to monitor recurring bills, eliminate hidden subscription traps, and protect your budget with statistical anomaly detection.
+          </p>
+
+          <div class="cta-actions">
+            <a href="signup.html" class="cta-btn-primary">
+              <span>Create Free Account →</span>
+            </a>
+            <a href="signin.html" class="cta-btn-secondary">
+              <span>Sign In to Portal</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         MODERN FOOTER
+    ====================================================== -->
+    <footer class="landing-footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="#hero" class="landing-logo">
+            Expense<span>Guard</span>
+          </a>
+          <p>
+            Smart recurring expense tracking and automated statistical anomaly detection platform. Built for modern financial transparency.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="#hero">Home</a></li>
+            <li><a href="#about-site">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#about-us">Our Mission</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Account</h4>
+          <ul>
+            <li><a href="signin.html">Sign In</a></li>
+            <li><a href="signup.html">Create Account</a></li>
+            <li><a href="admin.html">Admin Portal</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Security</h4>
+          <ul>
+            <li><a href="#about-us">Zero-Knowledge Storage</a></li>
+            <li><a href="#about-site">Client-Side Privacy</a></li>
+            <li><a href="#about-site">Open Architecture</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 ExpenseGuard. All rights reserved.
+        </div>
+        <div>
+          <a href="signin.html">Staff & Admin Access</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- SCRIPTS -->
     <script src="../javascript/app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // ----------------------------------------------------
+        // 1. IntersectionObserver for smooth scroll animations
+        // ----------------------------------------------------
+        const scrollElements = document.querySelectorAll(".scroll-hidden");
+
+        if ("IntersectionObserver" in window) {
+          const observer = new IntersectionObserver(
+            function (entries, observerInstance) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("scroll-show");
+                  observerInstance.unobserve(entry.target);
+                }
+              });
+            },
+            {
+              threshold: 0.12,
+              rootMargin: "0px 0px -40px 0px",
+            }
+          );
+
+          scrollElements.forEach(function (el) {
+            observer.observe(el);
+          });
+        } else {
+          scrollElements.forEach(function (el) {
+            el.classList.add("scroll-show");
+          });
+        }
+
+        // ----------------------------------------------------
+        // 3. Interactive Lighting Click Ripple Effect
+        // ----------------------------------------------------
+        document.addEventListener("click", function (e) {
+          if (e.target.closest("a") || e.target.closest("button") || e.target.closest(".feature-card")) {
+            const ripple = document.createElement("span");
+            ripple.className = "click-ripple";
+            ripple.style.left = e.pageX + "px";
+            ripple.style.top = e.pageY + "px";
+            ripple.style.width = "40px";
+            ripple.style.height = "40px";
+            ripple.style.marginLeft = "-20px";
+            ripple.style.marginTop = "-20px";
+            document.body.appendChild(ripple);
+            setTimeout(function () {
+              ripple.remove();
+            }, 600);
+          }
+        });
+
+        // ----------------------------------------------------
+        // 4. Subtle 3D Card Tilt on Hero Visual Card
+        // ----------------------------------------------------
+        const heroCard = document.getElementById("heroVisualCard");
+        if (heroCard && window.innerWidth > 900) {
+          const heroVisual = heroCard.parentElement;
+          heroVisual.addEventListener("mousemove", function (e) {
+            const rect = heroVisual.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            const rotateX = (-y / 25).toFixed(2);
+            const rotateY = (x / 25).toFixed(2);
+            heroCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+          });
+
+          heroVisual.addEventListener("mouseleave", function () {
+            heroCard.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)";
+          });
+        }
+      });
+    </script>
   </body>
 </html>
