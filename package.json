@@ -1,0 +1,26 @@
+﻿{
+  "name": "expenseguard-ce2",
+  "version": "2.0.0",
+  "private": true,
+  "description": "ExpenseGuard CE-2 backend and tests",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "test": "node --test tests/api.test.js tests/categories.test.js tests/anomalies.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.2.0",
+    "mongoose": "^8.5.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}
