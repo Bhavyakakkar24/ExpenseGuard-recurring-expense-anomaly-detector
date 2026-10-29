@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Profile - ExpenseGuard</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/evaluation.css" />
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="sidebar-header-row">
+          <div class="logo">Expense<span>Guard</span></div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close navigation">&times;</button>
+        </div>
+        <div class="menu-title">MAIN MENU</div>
+        <a href="../dashboard.html" class="nav-item"
+          ><span class="nav-icon">⌂</span><span>Dashboard</span></a
+        ><a href="transactions.html" class="nav-item"
+          ><span class="nav-icon">₹</span><span>Transactions</span></a
+        ><a href="anomalies.html" class="nav-item"
+          ><span class="nav-icon">⚠</span><span>Anomalies</span></a
+        ><a href="categories.html" class="nav-item"
+          ><span class="nav-icon">▣</span><span>Categories</span></a
+        ><a href="reports.html" class="nav-item"
+          ><span class="nav-icon">▤</span><span>Reports</span></a
+        >
+        <div class="menu-title">TOOLS</div>
+        <a href="budgets.html" class="nav-item"
+          ><span class="nav-icon">◫</span><span>Budgets</span></a
+        >
+        <div class="menu-title">SETTINGS</div>
+        <a href="settings.html" class="nav-item"
+          ><span class="nav-icon">⚙</span><span>Settings</span></a
+        >
+      </aside>
+      <main class="main">
+        <header class="header">
+          <div class="header-left-wrap">
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open Navigation">☰</button>
+            <div>
+              <div class="eyebrow">YOUR ACCOUNT</div>
+              <h1>My Profile</h1>
+              <p>Manage your personal ExpenseGuard information.</p>
+            </div>
+          </div>
+        </header>
+        <div class="profile-grid">
+          <section class="card">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 24px;
+              "
+            >
+              <div
+                class="profile-circle"
+                id="bigInitials"
+                style="width: 64px; height: 64px; font-size: 20px"
+              >
+                EG
+              </div>
+              <div>
+                <h2 id="profileTitle">My Account</h2>
+                <p id="profileEmail" style="color: var(--muted)">
+                  Not signed in
+                </p>
+              </div>
+            </div>
+            <form id="profileForm">
+              <div class="form-group" style="margin-bottom: 15px">
+                <label>FULL NAME</label><input id="profileNameInput" required />
+              </div>
+              <div class="form-group" style="margin-bottom: 15px">
+                <label>EMAIL ADDRESS</label
+                ><input id="profileEmailInput" type="email" required />
+              </div>
+              <button class="add-btn" style="width: 100%">Save Profile</button>
+            </form>
+          </section>
+          <section class="card">
+            <div class="card-header">
+              <div>
+                <h2>Account summary</h2>
+                <p>Live information from your browser storage.</p>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <strong>Total transactions</strong>
+                <p style="color: var(--muted); font-size: 12px">
+                  Persistent MongoDB records
+                </p>
+              </div>
+              <strong id="profileCount">0</strong>
+            </div>
+            <div class="setting-row">
+              <div>
+                <strong>Total spending</strong>
+                <p style="color: var(--muted); font-size: 12px">
+                  All recorded expenses
+                </p>
+              </div>
+              <strong id="profileSpend">₹0</strong>
+            </div>
+            <div class="setting-row">
+              <div>
+                <strong>Database & Auth</strong>
+                <p style="color: var(--muted); font-size: 12px">
+                  MongoDB Atlas · Firebase Google Auth
+                </p>
+              </div>
+              <span
+                class="status-badge"
+                style="background: #e9fbf3; color: #15966a; padding: 6px 10px"
+                >Active</span
+              >
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="../javascript/firebase-auth.js"></script>
+    <script src="../javascript/api.js"></script>
+    <script src="../javascript/app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async function () {
+        let user = getCurrentUser() || {
+          name: "My Account",
+          email: "Not signed in",
+        };
+        const n = document.getElementById("profileNameInput"),
+          e = document.getElementById("profileEmailInput");
+        if (n) n.value = user.name || "";
+        if (e) e.value = user.email || "";
+
+        async function paint() {
+          const fbUser = window.getFirebaseCurrentUser ? window.getFirebaseCurrentUser() : null;
+          if (fbUser) {
+            user = {
+              name: fbUser.displayName || user.name || "My Account",
+              email: fbUser.email || user.email || "Not signed in",
+              photoURL: fbUser.photoURL || user.photoURL || ""
+            };
+            if (n && (!n.value || n.value === "My Account")) n.value = user.name;
+            if (e && (!e.value || e.value === "Not signed in")) e.value = user.email;
+          }
+          const pTitle = document.getElementById("profileTitle");
+          const pEmail = document.getElementById("profileEmail");
+          const pInitials = document.getElementById("bigInitials");
+          if (pTitle) pTitle.textContent = user.name || "My Account";
+          if (pEmail) pEmail.textContent = user.email || "Not signed in";
+          if (pInitials) {
+            if (user.photoURL) {
+              pInitials.innerHTML = `<img src="${user.photoURL}" alt="${user.name}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            } else {
+              pInitials.textContent = getUserInitials(user.name);
+            }
+          }
+
+          let tx = [];
+          if (typeof window.fetchTransactions === "function") {
+            tx = await window.fetchTransactions();
+          } else if (typeof getTransactions === "function") {
+            tx = getTransactions();
+          }
+          const pCount = document.getElementById("profileCount");
+          const pSpend = document.getElementById("profileSpend");
+          if (pCount) pCount.textContent = tx.length;
+          if (pSpend) {
+            pSpend.textContent =
+              "₹" +
+              tx
+                .reduce((s, t) => s + Number(t.amount || 0), 0)
+                .toLocaleString("en-IN");
+          }
+        }
+
+        await paint();
+
+        if (window.onFirebaseAuthChange) {
+          window.onFirebaseAuthChange(async () => {
+            await paint();
+          });
+        }
+
+        const form = document.getElementById("profileForm");
+        if (form) {
+          form.addEventListener("submit", function (ev) {
+            ev.preventDefault();
+            user = { ...user, name: n.value.trim(), email: e.value.trim() };
+            localStorage.setItem(
+              "expenseGuardCurrentUser",
+              JSON.stringify(user),
+            );
+            localStorage.setItem("expenseGuardLoggedIn", "true");
+            paint();
+            const t = document.createElement("div");
+            t.className = "toast";
+            t.textContent = "Profile saved successfully";
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2200);
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

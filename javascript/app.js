@@ -26,11 +26,49 @@ function applyTheme(theme) {
     if (document.body) document.body.classList.remove("theme-light"); 
   } 
 } 
- 
-// Immediately apply theme 
+
+// ============================================================ 
+// GLOBAL SETTINGS APPLICATION 
+// ============================================================ 
+
+function applySettings() {
+  const showName = localStorage.getItem("expenseGuardSetting_showName") !== "false";
+  const showEmail = localStorage.getItem("expenseGuardSetting_showEmail") !== "false";
+  const motion = localStorage.getItem("expenseGuardSetting_motion") !== "false";
+  const compact = localStorage.getItem("expenseGuardSetting_compact") === "true";
+  const anomalyAlerts = localStorage.getItem("expenseGuardSetting_anomalyAlerts") !== "false";
+  const insights = localStorage.getItem("expenseGuardSetting_insights") !== "false";
+
+  const root = document.documentElement;
+  const body = document.body;
+
+  const toggleClass = (cls, active) => {
+    if (root) root.classList.toggle(cls, active);
+    if (body) body.classList.toggle(cls, active);
+  };
+
+  toggleClass("no-motion", !motion);
+  toggleClass("compact-mode", compact);
+  toggleClass("hide-anomaly-alerts", !anomalyAlerts);
+  toggleClass("hide-insights", !insights);
+  toggleClass("hide-show-name", !showName);
+  toggleClass("hide-show-email", !showEmail);
+
+  if (typeof loadProfileInformation === "function") {
+    loadProfileInformation();
+  }
+}
+
+window.applySettings = applySettings;
+
+// Immediately apply theme and settings 
 applyTheme(); 
+applySettings();
 if (document.readyState === "loading") { 
-  document.addEventListener("DOMContentLoaded", () => applyTheme()); 
+  document.addEventListener("DOMContentLoaded", () => {
+    applyTheme();
+    applySettings();
+  }); 
 } 
  
 // ============================================================ 
@@ -70,8 +108,8 @@ function isLoggedIn() {
 } 
  
 function getUserInitials(name) { 
-  if (!name) { 
-    return "BK"; 
+  if (!name || name === "My Account") { 
+    return "EG"; 
   } 
  
   const parts = name.trim().split(/\s+/); 
@@ -93,25 +131,106 @@ function getUserInitials(name) {
 // TRANSACTION STORAGE 
 // ============================================================ 
  
+function getTransactionStorageKey() {
+  try {
+    const user = getCurrentUser();
+    if (user && user.email) {
+      return "expenseGuardTransactions_" + user.email.toLowerCase().trim();
+    }
+  } catch (e) {}
+  return STORAGE_KEY;
+}
+
+// In-memory cache for API transactions
+let appTransactionsCache = [];
+let isTransactionsLoaded = false;
+
+function getLocalTransactionsFallback() {
+  const userKey = getTransactionStorageKey();
+  const data = localStorage.getItem(userKey);
+  if (data !== null) {
+    try {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  const globalData = localStorage.getItem(STORAGE_KEY);
+  if (globalData !== null) {
+    try {
+      const parsedGlobal = JSON.parse(globalData);
+      if (Array.isArray(parsedGlobal)) return parsedGlobal;
+    } catch (e) {}
+  }
+  return [];
+}
+
+async function fetchTransactions(force = false) {
+  if (isTransactionsLoaded && !force) {
+    return appTransactionsCache;
+  }
+
+  // Ensure Firebase Auth state has completed before making API calls
+  if (window.ExpenseGuardAuth && typeof window.ExpenseGuardAuth.waitForAuth === "function") {
+    try {
+      await window.ExpenseGuardAuth.waitForAuth();
+    } catch (e) {
+      console.warn("waitForAuth error in fetchTransactions:", e);
+    }
+  }
+
+  const isAuthUser = Boolean(
+    window.ExpenseGuardAuth &&
+    typeof window.ExpenseGuardAuth.getCurrentUser === "function" &&
+    window.ExpenseGuardAuth.getCurrentUser()
+  );
+
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.getTransactions === "function") {
+    try {
+      const apiData = await window.ExpenseGuardAPI.getTransactions();
+      if (Array.isArray(apiData)) {
+        appTransactionsCache = apiData;
+        isTransactionsLoaded = true;
+        return appTransactionsCache;
+      }
+    } catch (err) {
+      console.warn("Could not fetch transactions from API:", err.message);
+      if (isAuthUser) {
+        // Authenticated user API error - do NOT fall back to dummy local storage
+        appTransactionsCache = [];
+        isTransactionsLoaded = true;
+        return appTransactionsCache;
+      }
+    }
+  }
+
+  // Fallback to local data only if user is not authenticated or API is unavailable
+  if (!isAuthUser) {
+    appTransactionsCache = getLocalTransactionsFallback();
+  } else {
+    appTransactionsCache = [];
+  }
+  isTransactionsLoaded = true;
+  return appTransactionsCache;
+}
+
 function getTransactions() { 
-  const data = localStorage.getItem(STORAGE_KEY); 
- 
-  if (!data) { 
-    return []; 
+  if (isTransactionsLoaded) { 
+    return appTransactionsCache; 
   } 
- 
-  try { 
-    return JSON.parse(data); 
-  } catch (error) { 
-    console.error("Error reading transactions:", error); 
- 
-    return []; 
-  } 
+  return getLocalTransactionsFallback(); 
 } 
  
 function saveTransactions(transactions) { 
+  appTransactionsCache = Array.isArray(transactions) ? transactions : [];
+  isTransactionsLoaded = true;
+  const userKey = getTransactionStorageKey();
+  localStorage.setItem(userKey, JSON.stringify(transactions)); 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions)); 
 } 
+
+window.fetchTransactions = fetchTransactions;
+window.getTransactions = getTransactions;
+window.saveTransactions = saveTransactions;
  
 // ============================================================ 
 // DATE FORMAT 
@@ -136,13 +255,16 @@ function formatDate(dateString) {
 // ============================================================ 
  
 function calculateMean(numbers) { 
-  if (numbers.length === 0) { 
+  if (!Array.isArray(numbers) || numbers.length === 0) { 
     return 0; 
   } 
  
-  const total = numbers.reduce((sum, number) => sum + number, 0); 
+  const valid = numbers.map(Number).filter(Number.isFinite); 
+  if (valid.length === 0) return 0; 
  
-  return total / numbers.length; 
+  const total = valid.reduce((sum, number) => sum + number, 0); 
+ 
+  return total / valid.length; 
 } 
  
 // ============================================================ 
@@ -150,18 +272,21 @@ function calculateMean(numbers) {
 // ============================================================ 
  
 function calculateStandardDeviation(numbers) { 
-  if (numbers.length === 0) { 
+  if (!Array.isArray(numbers) || numbers.length <= 1) { 
     return 0; 
   } 
  
-  const mean = calculateMean(numbers); 
+  const valid = numbers.map(Number).filter(Number.isFinite); 
+  if (valid.length <= 1) return 0; 
  
-  const squaredDifferences = numbers.map((number) => 
+  const mean = calculateMean(valid); 
+ 
+  const squaredDifferences = valid.map((number) => 
     Math.pow(number - mean, 2), 
   ); 
  
   const variance = 
-    squaredDifferences.reduce((sum, value) => sum + value, 0) / numbers.length; 
+    squaredDifferences.reduce((sum, value) => sum + value, 0) / valid.length; 
  
   return Math.sqrt(variance); 
 } 
@@ -171,76 +296,197 @@ function calculateStandardDeviation(numbers) {
 // ============================================================ 
  
 function calculateZScore(amount, values) { 
-  const mean = calculateMean(values); 
+  const numAmount = Number(amount); 
+  if (!Number.isFinite(numAmount)) return 0; 
  
-  const standardDeviation = calculateStandardDeviation(values); 
+  const valid = (Array.isArray(values) ? values : []) 
+    .map(Number) 
+    .filter(Number.isFinite); 
  
-  if (standardDeviation === 0) { 
+  if (valid.length <= 1) return 0; 
+ 
+  const mean = calculateMean(valid); 
+  const standardDeviation = calculateStandardDeviation(valid); 
+ 
+  if (!Number.isFinite(standardDeviation) || standardDeviation === 0) { 
     return 0; 
   } 
  
-  return (amount - mean) / standardDeviation; 
+  const z = (numAmount - mean) / standardDeviation; 
+  return Number.isFinite(z) ? z : 0; 
 } 
  
 // ============================================================ 
-// ANOMALY DETECTION 
+// CENTRALIZED STATISTICAL RISK ENGINE 
 // ============================================================ 
+ 
+function buildCategoryStats(allTransactions = []) {
+  const categoryGroups = {};
+  const allAmounts = [];
+ 
+  (allTransactions || []).forEach((t) => {
+    const cat = t.category || "Other";
+    const amt = Number(t.amount) || 0;
+    if (!categoryGroups[cat]) {
+      categoryGroups[cat] = [];
+    }
+    categoryGroups[cat].push(amt);
+    allAmounts.push(amt);
+  });
+ 
+  const globalMean = calculateMean(allAmounts);
+  const stats = { globalMean, categories: {} };
+ 
+  Object.keys(categoryGroups).forEach((cat) => {
+    const values = categoryGroups[cat];
+    stats.categories[cat] = {
+      values,
+      mean: calculateMean(values),
+      sd: calculateStandardDeviation(values),
+      count: values.length,
+    };
+  });
+ 
+  return stats;
+}
+ 
+function analyzeTransactionRisk(tx, allTransactions = [], cachedStats = null) {
+  if (!tx) {
+    return {
+      zScore: 0,
+      patternRatio: 1,
+      ratio: 1,
+      riskLevel: "Normal",
+      risk: "low",
+      isAnomaly: false,
+    };
+  }
+ 
+  const amt = Number(tx.amount) || 0;
+  const cat = tx.category || "Other";
+  const stats = cachedStats || buildCategoryStats(allTransactions);
+  const catStat = stats.categories[cat] || {
+    values: [amt],
+    mean: amt,
+    sd: 0,
+    count: 1,
+  };
+ 
+  let zScore = 0;
+  let patternRatio = 1;
+ 
+  if (catStat.count >= 2) {
+    zScore = catStat.sd > 0 ? (amt - catStat.mean) / catStat.sd : 0;
+    patternRatio = catStat.mean > 0 ? amt / catStat.mean : 1;
+  } else {
+    // Fallback for single transaction in category: compare against global baseline
+    const globalMean = stats.globalMean;
+    if (globalMean > 0) {
+      zScore = amt >= globalMean * 1.6 ? amt / globalMean : 0;
+      patternRatio = amt / globalMean;
+    } else {
+      zScore = 0;
+      patternRatio = 1;
+    }
+  }
+ 
+  if (!Number.isFinite(zScore)) zScore = 0;
+  if (!Number.isFinite(patternRatio)) patternRatio = 1;
+ 
+  zScore = Number(zScore.toFixed(2));
+  patternRatio = Number(patternRatio.toFixed(2));
+ 
+  // Exact Thresholds specified:
+  // High Risk: zScore >= 2.6 OR patternRatio >= 3.0
+  // Medium Risk: zScore >= 1.8 OR patternRatio >= 1.6
+  // Normal: Anything else
+  let riskLevel = "Normal";
+  let isAnomaly = false;
+ 
+  if (zScore >= 2.6 || patternRatio >= 3.0) {
+    riskLevel = "High";
+    isAnomaly = true;
+  } else if (zScore >= 1.8 || patternRatio >= 1.6) {
+    riskLevel = "Medium";
+    isAnomaly = true;
+  } else {
+    riskLevel = "Normal";
+    isAnomaly = false;
+  }
+ 
+  return {
+    zScore,
+    patternRatio,
+    ratio: patternRatio,
+    riskLevel,
+    risk: riskLevel.toLowerCase(),
+    isAnomaly,
+  };
+}
+ 
+function analyzeAllTransactions(allTransactions = []) {
+  if (!Array.isArray(allTransactions) || allTransactions.length === 0) {
+    return [];
+  }
+  const stats = buildCategoryStats(allTransactions);
+  return allTransactions.map((tx) => {
+    const riskData = analyzeTransactionRisk(tx, allTransactions, stats);
+    return {
+      ...tx,
+      ...riskData,
+    };
+  });
+}
  
 function analyzeTransactions(transactions) { 
-  if (transactions.length === 0) { 
-    return []; 
-  } 
- 
-  const categoryAmounts = {}; 
- 
-  transactions.forEach((transaction) => { 
-    if (!categoryAmounts[transaction.category]) { 
-      categoryAmounts[transaction.category] = []; 
-    } 
- 
-    categoryAmounts[transaction.category].push(Number(transaction.amount)); 
-  }); 
- 
-  return transactions.map((transaction) => { 
-    const values = categoryAmounts[transaction.category]; 
- 
-    const zScore = calculateZScore(Number(transaction.amount), values); 
- 
-    const isAnomaly = Math.abs(zScore) >= 2; 
- 
-    return { 
-      ...transaction, 
- 
-      zScore: Number(zScore.toFixed(2)), 
- 
-      isAnomaly: isAnomaly, 
-    }; 
-  }); 
+  return analyzeAllTransactions(transactions);
 } 
+ 
+window.buildCategoryStats = buildCategoryStats;
+window.analyzeTransactionRisk = analyzeTransactionRisk;
+window.analyzeAllTransactions = analyzeAllTransactions;
+window.analyzeTransactions = analyzeTransactions;
+ 
  
 // ============================================================ 
 // ADD TRANSACTION 
 // ============================================================ 
  
-function addTransaction(transactionData) { 
+async function addTransaction(transactionData) { 
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.createTransaction === "function") {
+    try {
+      const created = await window.ExpenseGuardAPI.createTransaction({
+        date: transactionData.date,
+        category: transactionData.category,
+        description: transactionData.description,
+        amount: Number(transactionData.amount),
+        isRecurring: Boolean(transactionData.isRecurring),
+        paymentMethod: transactionData.paymentMethod || "Other",
+        tags: transactionData.tags || [],
+      });
+      // Deduplicate before unshifting into cache
+      const createdId = (created.id || created._id)?.toString();
+      appTransactionsCache = appTransactionsCache.filter(t => (t.id || t._id)?.toString() !== createdId);
+      appTransactionsCache.unshift(created);
+      isTransactionsLoaded = true;
+      return created;
+    } catch (err) {
+      console.error("API addTransaction failed:", err);
+      throw err;
+    }
+  }
+
+  // Fallback if API unavailable
   const transactions = getTransactions(); 
- 
   const transaction = { 
     id: Date.now(), 
- 
     date: transactionData.date, 
- 
     category: transactionData.category, 
- 
     description: transactionData.description, 
- 
     amount: Number(transactionData.amount), 
   }; 
- 
-  transactions.push(transaction); 
- 
+  transactions.unshift(transaction); 
   saveTransactions(transactions); 
- 
   return transaction; 
 } 
  
@@ -257,74 +503,74 @@ function escapeHTML(value) {
 } 
  
 // ============================================================ 
+// ============================================================ 
+// PATH REDIRECT HELPER 
+// ============================================================ 
+ 
+function getPageRedirect(targetInPages) { 
+  const currentPage = 
+    window.location.pathname.split("/").pop() || "index.html"; 
+  if ( 
+    currentPage === "dashboard.html" || 
+    currentPage === "index.html" || 
+    currentPage === "" 
+  ) { 
+    return "pages/" + targetInPages; 
+  } 
+  return targetInPages; 
+} 
+ 
+// ============================================================ 
 // LOAD PROFILE INFORMATION 
 // ============================================================ 
  
 function loadProfileInformation() { 
   const user = getCurrentUser(); 
+  const showName = localStorage.getItem("expenseGuardSetting_showName") !== "false";
+  const showEmail = localStorage.getItem("expenseGuardSetting_showEmail") !== "false";
+
+  const rawName = user?.name || user?.displayName || localStorage.getItem("expenseGuardSetting_name") || "My Account";
+  const rawEmail = user?.email || localStorage.getItem("expenseGuardSetting_email") || (user ? "" : "Not signed in");
+  const photoURL = user?.photoURL || "";
+
+  const name = showName ? rawName : "User";
+  const email = showEmail ? rawEmail : "••••@••••.com";
+  const initials = showName ? getUserInitials(rawName) : "EG";
  
-  const profileName = document.getElementById("profileName"); 
+  const targets = { 
+    profileName: name, 
+    profileInitials: initials, 
+    dropdownName: name, 
+    dropdownEmail: email, 
+    dropdownInitials: initials, 
+    anUser: name, 
+    anInitials: initials, 
+    catUser: name, 
+    catInitials: initials, 
+    budgetUser: name, 
+    budgetInitials: initials, 
+    repUser: name, 
+    repInitials: initials, 
+    setUser: name, 
+    setInitials: initials, 
+    profileTitle: name, 
+    profileEmail: email, 
+    bigInitials: initials, 
+    previewName: showName ? rawName : "User (Hidden)",
+    previewEmail: showEmail ? rawEmail : "••••@••••.com (Hidden)",
+    previewInitials: initials,
+  }; 
  
-  const profileInitials = document.getElementById("profileInitials"); 
- 
-  const dropdownName = document.getElementById("dropdownName"); 
- 
-  const dropdownEmail = document.getElementById("dropdownEmail"); 
- 
-  const dropdownInitials = document.getElementById("dropdownInitials"); 
- 
-  // -------------------------------------------------------- 
-  // LOGGED IN USER 
-  // -------------------------------------------------------- 
- 
-  if (user) { 
-    const initials = getUserInitials(user.name); 
- 
-    if (profileName) { 
-      profileName.textContent = user.name; 
-    } 
- 
-    if (profileInitials) { 
-      profileInitials.textContent = initials; 
-    } 
- 
-    if (dropdownName) { 
-      dropdownName.textContent = user.name; 
-    } 
- 
-    if (dropdownEmail) { 
-      dropdownEmail.textContent = user.email; 
-    } 
- 
-    if (dropdownInitials) { 
-      dropdownInitials.textContent = initials; 
-    } 
-  } 
- 
-  // -------------------------------------------------------- 
-  // NOT LOGGED IN 
-  // -------------------------------------------------------- 
-  else { 
-    if (profileName) { 
-      profileName.textContent = "My Account"; 
-    } 
- 
-    if (profileInitials) { 
-      profileInitials.textContent = "BK"; 
-    } 
- 
-    if (dropdownName) { 
-      dropdownName.textContent = "My Account"; 
-    } 
- 
-    if (dropdownEmail) { 
-      dropdownEmail.textContent = "Not signed in"; 
-    } 
- 
-    if (dropdownInitials) { 
-      dropdownInitials.textContent = "BK"; 
-    } 
-  } 
+  Object.entries(targets).forEach(([id, val]) => { 
+    const el = document.getElementById(id); 
+    if (!el) return;
+
+    if (photoURL && (id === "profileInitials" || id === "dropdownInitials" || id === "bigInitials")) {
+      el.innerHTML = `<img src="${photoURL}" alt="${escapeHTML(name)}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.onerror=null; this.parentElement.textContent='${initials}'">`;
+    } else {
+      el.textContent = val; 
+    }
+  }); 
 } 
  
 // ============================================================ 
@@ -389,26 +635,241 @@ function initializeProfileDropdown() {
   // -------------------------------------------------------- 
  
   if (logoutButton) { 
-    logoutButton.addEventListener("click", function (event) { 
+    logoutButton.addEventListener("click", async function (event) { 
       event.preventDefault(); 
- 
       event.stopPropagation(); 
- 
+
+      if (window.ExpenseGuardAuth && typeof window.ExpenseGuardAuth.signOut === "function") {
+        try {
+          await window.ExpenseGuardAuth.signOut();
+        } catch (e) {}
+      }
+
+      if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.closeRealtime === "function") {
+        window.ExpenseGuardAPI.closeRealtime();
+      }
+
       localStorage.removeItem(LOGIN_KEY); 
- 
       localStorage.removeItem(CURRENT_USER_KEY); 
- 
-      // Dashboard is in root folder 
- 
-      window.location.replace("pages/welcome.html"); 
+      sessionStorage.clear(); 
+
+      window.location.replace(getPageRedirect("welcome.html")); 
     }); 
   } 
 } 
- 
+
 // ============================================================ 
-// SIGN UP 
+// MOBILE NAVIGATION DRAWER 
 // ============================================================ 
+
+function initializeMobileNav() {
+  const sidebar = document.querySelector(".sidebar");
+  if (!sidebar) return;
+
+  // Create backdrop if not present
+  let backdrop = document.getElementById("sidebarBackdrop");
+  if (!backdrop) {
+    backdrop = document.createElement("div");
+    backdrop.id = "sidebarBackdrop";
+    backdrop.className = "sidebar-backdrop";
+    document.body.appendChild(backdrop);
+  }
+
+  // Create close button in sidebar if not present
+  let closeBtn = document.getElementById("sidebarCloseBtn");
+  if (!closeBtn) {
+    closeBtn = document.createElement("button");
+    closeBtn.id = "sidebarCloseBtn";
+    closeBtn.className = "sidebar-close-btn";
+    closeBtn.type = "button";
+    closeBtn.setAttribute("aria-label", "Close navigation");
+    closeBtn.innerHTML = "&times;";
+    
+    // Insert inside sidebar before or next to logo
+    const logo = sidebar.querySelector(".logo");
+    if (logo) {
+      const headerWrap = document.createElement("div");
+      headerWrap.className = "sidebar-header-row";
+      logo.parentNode.insertBefore(headerWrap, logo);
+      headerWrap.appendChild(logo);
+      headerWrap.appendChild(closeBtn);
+    } else {
+      sidebar.prepend(closeBtn);
+    }
+  }
+
+  function openSidebar() {
+    sidebar.classList.add("mobile-open");
+    document.body.classList.add("sidebar-open");
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove("mobile-open");
+    document.body.classList.remove("sidebar-open");
+  }
+
+  function toggleSidebar() {
+    if (sidebar.classList.contains("mobile-open")) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  }
+
+  // Bind to any mobile menu toggle buttons
+  const menuButtons = document.querySelectorAll(".mobile-menu-btn, #mobileMenuBtn");
+  menuButtons.forEach((btn) => {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSidebar();
+    });
+  });
+
+  // If no menu button found in DOM yet, inject one into .header if present
+  if (menuButtons.length === 0) {
+    const header = document.querySelector(".header");
+    if (header) {
+      const autoBtn = document.createElement("button");
+      autoBtn.className = "mobile-menu-btn";
+      autoBtn.id = "mobileMenuBtn";
+      autoBtn.type = "button";
+      autoBtn.setAttribute("aria-label", "Open menu");
+      autoBtn.innerHTML = "<span>☰</span>";
+      autoBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSidebar();
+      });
+
+      // Insert at the beginning of header or inside a header-left group
+      const firstChild = header.firstElementChild;
+      if (firstChild) {
+        const wrap = document.createElement("div");
+        wrap.className = "header-left-wrap";
+        header.insertBefore(wrap, firstChild);
+        wrap.appendChild(autoBtn);
+        wrap.appendChild(firstChild);
+      } else {
+        header.prepend(autoBtn);
+      }
+    }
+  }
+
+  // Backdrop click closes sidebar
+  backdrop.addEventListener("click", function () {
+    closeSidebar();
+  });
+
+  // Close button click
+  closeBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeSidebar();
+  });
+
+  // Clicking any nav item closes the sidebar on mobile
+  const navItems = sidebar.querySelectorAll(".nav-item");
+  navItems.forEach((item) => {
+    item.addEventListener("click", function () {
+      if (window.innerWidth <= 900) {
+        closeSidebar();
+      }
+    });
+  });
+
+  // ESC key closes sidebar
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && sidebar.classList.contains("mobile-open")) {
+      closeSidebar();
+    }
+  });
+
+  // Resize handler
+  window.addEventListener("resize", function () {
+    if (window.innerWidth > 900 && sidebar.classList.contains("mobile-open")) {
+      closeSidebar();
+    }
+  });
+} 
  
+// ============================================================
+// PASSWORD VALIDATION & TOGGLE HELPERS
+// ============================================================
+
+function validateStrictPassword(password) {
+  const missing = [];
+
+  if (!password || password.length < 12) {
+    missing.push("Minimum of 12 characters in length");
+  }
+  if (!/[A-Z]/.test(password)) {
+    missing.push("At least one uppercase letter (A-Z)");
+  }
+  if (!/[a-z]/.test(password)) {
+    missing.push("At least one lowercase letter (a-z)");
+  }
+  if (!/[0-9]/.test(password)) {
+    missing.push("At least one number (0-9)");
+  }
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    missing.push("At least one special character (e.g. !@#$%^&*...)");
+  }
+
+  const strictPasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
+
+  return {
+    isValid: missing.length === 0 && strictPasswordRegex.test(password),
+    missing: missing,
+  };
+}
+
+function initializePasswordToggles() {
+  const toggleButtons = document.querySelectorAll(".password-toggle-btn");
+
+  toggleButtons.forEach((button) => {
+    if (button.dataset.initialized === "true") {
+      return;
+    }
+    button.dataset.initialized = "true";
+
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const targetId = button.getAttribute("data-target");
+      const input = targetId
+        ? document.getElementById(targetId)
+        : button.closest(".password-input-wrapper")?.querySelector("input");
+
+      if (!input) {
+        return;
+      }
+
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+
+      const eyeIcon = button.querySelector(".eye-icon");
+      const eyeOffIcon = button.querySelector(".eye-off-icon");
+
+      if (eyeIcon && eyeOffIcon) {
+        if (isPassword) {
+          eyeIcon.style.display = "none";
+          eyeOffIcon.style.display = "block";
+          button.setAttribute("aria-label", "Hide password");
+          button.setAttribute("title", "Hide password");
+        } else {
+          eyeIcon.style.display = "block";
+          eyeOffIcon.style.display = "none";
+          button.setAttribute("aria-label", "Show password");
+          button.setAttribute("title", "Show password");
+        }
+      }
+    });
+  });
+}
+
 function initializeSignup() { 
   const signupForm = document.getElementById("signupForm"); 
  
@@ -453,14 +914,17 @@ function initializeSignup() {
  
       return; 
     } 
- 
-    if (password.length < 6) { 
-      message.textContent = "Password must be at least 6 characters."; 
- 
-      message.className = "auth-message error"; 
- 
-      return; 
-    } 
+
+    // Strict Password Validation
+    const passwordValidation = validateStrictPassword(password);
+    if (!passwordValidation.isValid) {
+      const requirementsHtml = passwordValidation.missing
+        .map((req) => `<li>${req}</li>`)
+        .join("");
+      message.innerHTML = `<strong>Password does not meet requirements:</strong><ul>${requirementsHtml}</ul>`;
+      message.className = "auth-message error";
+      return;
+    }
  
     if (password !== confirmPassword) { 
       message.textContent = "Passwords do not match."; 
@@ -501,11 +965,19 @@ function initializeSignup() {
       email: email, 
  
       password: password, 
+
+      createdAt: new Date().toISOString().slice(0, 10),
     }; 
  
     users.push(newUser); 
  
     saveUsers(users); 
+
+    // Explicitly initialize empty transactions for newly registered user
+    localStorage.setItem(
+      "expenseGuardTransactions_" + email.toLowerCase().trim(),
+      JSON.stringify([]),
+    );
  
     // ------------------------------------------------ 
     // IMPORTANT: 
@@ -642,11 +1114,10 @@ function initializeSignin() {
 // PROTECT PAGES 
 // ============================================================ 
  
-function protectDashboard() { 
+async function protectDashboard() { 
   const currentPage = 
     window.location.pathname.split("/").pop() || "index.html"; 
  
-  // Pages that require the user to be logged in 
   const protectedPages = [ 
     "dashboard.html", 
     "transactions.html", 
@@ -657,26 +1128,62 @@ function protectDashboard() {
     "profile.html", 
     "settings.html", 
   ]; 
- 
-  // If the current page is protected and user is logged out 
+
+  const authPages = ["signin.html", "signup.html"];
+
+  // Asynchronous Firebase Authentication state handling
+  if (window.ExpenseGuardAuth) {
+    if (window.ExpenseGuardAuth.isConfigured()) {
+      const user = await window.ExpenseGuardAuth.waitForAuth();
+
+      // Protected pages: redirect to sign-in if unauthenticated
+      if (protectedPages.includes(currentPage) && !user) {
+        if (currentPage === "dashboard.html") {
+          window.location.replace("pages/signin.html");
+        } else {
+          window.location.replace("signin.html");
+        }
+        return;
+      }
+
+      // Auth pages: redirect to dashboard if authenticated
+      if (authPages.includes(currentPage) && user) {
+        window.location.replace("../dashboard.html");
+        return;
+      }
+
+      return;
+    }
+  }
+
+  // Fallback for offline / placeholder state
   if (protectedPages.includes(currentPage) && !isLoggedIn()) { 
-    // dashboard.html is in the root folder 
     if (currentPage === "dashboard.html") { 
       window.location.replace("pages/signin.html"); 
     } else { 
-      // Other protected pages are inside /pages/ 
       window.location.replace("signin.html"); 
     } 
- 
     return; 
   } 
 } 
+ 
+// Support Back/Forward cache (bfcache) 
+window.addEventListener("pageshow", function (event) { 
+  if (event.persisted) { 
+    protectDashboard(); 
+  } 
+}); 
 // ============================================================ 
 // DASHBOARD UPDATE 
 // ============================================================ 
  
-function updateDashboard() { 
-  const transactions = getTransactions(); 
+async function updateDashboard() { 
+  let transactions = [];
+  try {
+    transactions = await fetchTransactions();
+  } catch (err) {
+    transactions = getTransactions();
+  }
  
   const analyzed = analyzeTransactions(transactions); 
  
@@ -685,12 +1192,11 @@ function updateDashboard() {
   // -------------------------------------------------------- 
  
   const total = transactions.reduce( 
-    (sum, transaction) => sum + Number(transaction.amount), 
+    (sum, transaction) => sum + Number(transaction.amount || 0), 
     0, 
   ); 
  
   const totalElement = document.getElementById("totalSpending"); 
- 
   if (totalElement) { 
     totalElement.textContent = "₹" + total.toLocaleString("en-IN"); 
   } 
@@ -700,7 +1206,6 @@ function updateDashboard() {
   // -------------------------------------------------------- 
  
   const transactionCount = document.getElementById("transactionCount"); 
- 
   if (transactionCount) { 
     transactionCount.textContent = transactions.length; 
   } 
@@ -712,13 +1217,11 @@ function updateDashboard() {
   const anomalies = analyzed.filter((transaction) => transaction.isAnomaly); 
  
   const anomalyCount = document.getElementById("anomalyCount"); 
- 
   if (anomalyCount) { 
     anomalyCount.textContent = anomalies.length; 
   } 
  
   const anomalyMessage = document.getElementById("anomalyMessage"); 
- 
   if (anomalyMessage) { 
     if (anomalies.length > 0) { 
       anomalyMessage.textContent = 
@@ -738,7 +1241,6 @@ function updateDashboard() {
   const average = transactions.length > 0 ? total / transactions.length : 0; 
  
   const averageElement = document.getElementById("averageExpense"); 
- 
   if (averageElement) { 
     averageElement.textContent = 
       "₹" + Math.round(average).toLocaleString("en-IN"); 
@@ -749,9 +1251,7 @@ function updateDashboard() {
   // -------------------------------------------------------- 
  
   updateRecentTransactions(analyzed); 
- 
   updateDashboardAnomalies(anomalies); 
- 
   updateCategorySpending(transactions); 
 } 
  
@@ -768,7 +1268,8 @@ function updateRecentTransactions(transactions) {
  
   tableBody.innerHTML = ""; 
  
-  const recent = [...transactions].reverse().slice(0, 5); 
+  const sorted = [...transactions].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  const recent = sorted.slice(0, 5); 
  
   if (recent.length === 0) { 
     tableBody.innerHTML = ` 
@@ -876,9 +1377,9 @@ function updateDashboardAnomalies(anomalies) {
     return; 
   } 
  
-  anomalies 
-    .slice() 
-    .reverse() 
+  const sortedAnomalies = [...anomalies].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  sortedAnomalies 
+    .slice(0, 4) 
     .forEach((transaction) => { 
       const box = document.createElement("div"); 
  
@@ -1029,98 +1530,385 @@ function initializeTransactionForm() {
   if (!form) { 
     return; 
   } 
+
+  let isSubmitting = false;
  
-  form.addEventListener("submit", function (event) { 
+  form.addEventListener("submit", async function (event) { 
     event.preventDefault(); 
+    if (isSubmitting) return;
  
     const date = document.getElementById("transactionDate").value; 
- 
     const category = document.getElementById("transactionCategory").value; 
- 
-    const description = document 
-      .getElementById("transactionDescription") 
-      .value.trim(); 
- 
+    const description = document.getElementById("transactionDescription").value.trim(); 
     const amount = Number(document.getElementById("transactionAmount").value); 
  
-    // ------------------------------------------------ 
-    // VALIDATION 
-    // ------------------------------------------------ 
- 
+    // Validation 
     if (!date) { 
       alert("Please select a date."); 
- 
       return; 
     } 
  
     if (!description) { 
       alert("Please enter a description."); 
- 
       return; 
     } 
  
     if (!amount || amount <= 0) { 
       alert("Please enter a valid amount."); 
- 
       return; 
     } 
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : "+ Add Expense";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
+    }
+    isSubmitting = true;
  
-    // ------------------------------------------------ 
-    // SAVE 
-    // ------------------------------------------------ 
- 
-    addTransaction({ 
-      date: date, 
- 
-      category: category, 
- 
-      description: description, 
- 
-      amount: amount, 
-    }); 
- 
-    // ------------------------------------------------ 
-    // RESET 
-    // ------------------------------------------------ 
- 
-    form.reset(); 
- 
-    alert("Transaction added successfully!"); 
- 
-    // ------------------------------------------------ 
-    // UPDATE DASHBOARD 
-    // ------------------------------------------------ 
- 
-    updateDashboard(); 
+    try {
+      await addTransaction({ 
+        date: date, 
+        category: category, 
+        description: description, 
+        amount: amount, 
+      }); 
+
+      form.reset(); 
+      toast("Transaction added to database!"); 
+      await updateDashboard(); 
+    } catch (err) {
+      alert("Error saving transaction: " + (err.message || "Network error"));
+    } finally {
+      isSubmitting = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
   }); 
+} 
+ 
+// ============================================================ 
+// CSV IMPORT HANDLER 
+// ============================================================ 
+ 
+function initializeCsvUpload() { 
+  const fileInput = document.getElementById("csvFile"); 
+  const uploadBox = document.querySelector(".upload-box"); 
+
+  if (!fileInput && !uploadBox) return; 
+
+  function parseAndSaveCsv(text) { 
+    try { 
+      if (!text || !text.trim()) { 
+        alert("Selected CSV file is empty."); 
+        return; 
+      } 
+
+      const lines = text.trim().split(/\r?\n/).filter((l) => l.trim().length > 0); 
+      if (lines.length === 0) { 
+        alert("CSV file contains no data."); 
+        return; 
+      } 
+
+      function parseCsvLine(line) { 
+        const cols = []; 
+        let current = ""; 
+        let inQuotes = false; 
+        for (let j = 0; j < line.length; j++) { 
+          const char = line[j]; 
+          if (char === '"' || char === "'") { 
+            inQuotes = !inQuotes; 
+          } else if (char === "," && !inQuotes) { 
+            cols.push(current.trim().replace(/^["']|["']$/g, "")); 
+            current = ""; 
+          } else { 
+            current += char; 
+          } 
+        } 
+        cols.push(current.trim().replace(/^["']|["']$/g, "")); 
+        return cols; 
+      } 
+
+      const firstRowCols = parseCsvLine(lines[0]); 
+      const lowerHeaders = firstRowCols.map((h) => h.toLowerCase()); 
+
+      let dateIdx = lowerHeaders.findIndex((h) => h.includes("date") || h.includes("time") || h.includes("day")); 
+      let descIdx = lowerHeaders.findIndex((h) => h.includes("desc") || h.includes("item") || h.includes("name") || h.includes("title") || h.includes("particular") || h.includes("detail") || h.includes("payee") || h.includes("note") || h.includes("trans")); 
+      let catIdx = lowerHeaders.findIndex((h) => h.includes("cat") || h.includes("type") || h.includes("group") || h.includes("tag")); 
+      let amtIdx = lowerHeaders.findIndex((h) => h.includes("amount") || h.includes("spend") || h.includes("price") || h.includes("cost") || h.includes("val") || h.includes("rs") || h.includes("inr") || h.includes("total") || h.includes("sum")); 
+
+      let startLine = 1; 
+
+      if (dateIdx === -1 && descIdx === -1 && amtIdx === -1) { 
+        const hasNumberInFirst = firstRowCols.some((c) => !isNaN(Number(c.replace(/[^0-9.-]+/g, ""))) && Number(c.replace(/[^0-9.-]+/g, "")) > 0); 
+        if (!hasNumberInFirst) { 
+          dateIdx = 0; 
+          descIdx = 1; 
+          catIdx = 2; 
+          amtIdx = 3; 
+          startLine = 1; 
+        } else { 
+          dateIdx = 0; 
+          descIdx = 1; 
+          catIdx = 2; 
+          amtIdx = 3; 
+          startLine = 0; 
+        } 
+      } else { 
+        if (dateIdx === -1) dateIdx = 0; 
+        if (descIdx === -1) descIdx = 1; 
+        if (amtIdx === -1) amtIdx = firstRowCols.length > 3 ? 3 : firstRowCols.length > 2 ? 2 : 1; 
+        if (catIdx === -1) catIdx = firstRowCols.length > 2 && catIdx !== dateIdx && catIdx !== descIdx && catIdx !== amtIdx ? 2 : -1; 
+      } 
+
+      const existing = getTransactions(); 
+      const newParsedTxs = [];
+      let importedCount = 0; 
+
+      for (let i = startLine; i < lines.length; i++) { 
+        const cols = parseCsvLine(lines[i]); 
+        if (cols.length === 0) continue; 
+
+        let date = cols[dateIdx] ? cols[dateIdx].trim() : ""; 
+        if (!date || isNaN(new Date(date).getTime())) { 
+          date = new Date().toISOString().slice(0, 10); 
+        } else { 
+          try { 
+            date = new Date(date).toISOString().slice(0, 10); 
+          } catch (e) { 
+            date = new Date().toISOString().slice(0, 10); 
+          } 
+        } 
+
+        const description = cols[descIdx] ? cols[descIdx].trim() : "Imported Expense"; 
+        const category = catIdx >= 0 && cols[catIdx] && cols[catIdx].trim() ? cols[catIdx].trim() : "Other"; 
+
+        let rawAmt = cols[amtIdx] || ""; 
+        let amount = Number(String(rawAmt).replace(/[^0-9.-]+/g, "")); 
+
+        if (!Number.isFinite(amount) || amount <= 0) { 
+          for (let c = 0; c < cols.length; c++) { 
+            const tryVal = Number(String(cols[c]).replace(/[^0-9.-]+/g, "")); 
+            if (Number.isFinite(tryVal) && tryVal > 0 && c !== dateIdx && c !== descIdx) { 
+              amount = tryVal; 
+              break; 
+            } 
+          } 
+        } 
+
+        if (Number.isFinite(amount) && amount > 0) { 
+          newParsedTxs.push({ 
+            date: date, 
+            category: category, 
+            description: description, 
+            amount: amount, 
+          }); 
+          importedCount++; 
+        } 
+      } 
+
+      if (importedCount > 0) { 
+        (async () => {
+          if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.importTransactions === "function") {
+            try {
+              await window.ExpenseGuardAPI.importTransactions(newParsedTxs);
+              await fetchTransactions(true);
+            } catch (apiErr) {
+              console.warn("Could not batch import via API, saving to local fallback:", apiErr);
+              saveTransactions([...existing, ...newParsedTxs]);
+            }
+          } else {
+            saveTransactions([...existing, ...newParsedTxs]);
+          }
+
+          if (typeof updateDashboard === "function") await updateDashboard(); 
+          if (typeof renderTransactions === "function") renderTransactions(); 
+          alert(`Successfully imported ${importedCount} transaction${importedCount === 1 ? "" : "s"} from CSV!`); 
+        })();
+      } else { 
+        alert("No valid transactions found in CSV file."); 
+      } 
+    } catch (err) { 
+      console.error("CSV import error:", err); 
+      alert("Failed to parse CSV file."); 
+    } 
+  } 
+
+  if (uploadBox && fileInput) { 
+    uploadBox.style.cursor = "pointer"; 
+    uploadBox.addEventListener("click", function (e) { 
+      if (e.target !== fileInput && !e.target.classList.contains("csv-label")) { 
+        fileInput.click(); 
+      } 
+    }); 
+  } 
+
+  if (fileInput) { 
+    fileInput.addEventListener("change", function (e) { 
+      const file = e.target.files && e.target.files[0]; 
+      if (!file) return; 
+      const reader = new FileReader(); 
+      reader.onload = function (evt) { 
+        parseAndSaveCsv(evt.target.result); 
+        fileInput.value = ""; 
+      }; 
+      reader.readAsText(file); 
+    }); 
+  } 
+
+  if (uploadBox) { 
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => { 
+      uploadBox.addEventListener(eventName, (e) => { 
+        e.preventDefault(); 
+        e.stopPropagation(); 
+      }, false); 
+    }); 
+
+    ["dragenter", "dragover"].forEach((eventName) => { 
+      uploadBox.addEventListener(eventName, () => { 
+        uploadBox.style.borderColor = "#2563eb"; 
+        uploadBox.style.background = "rgba(37, 99, 235, 0.1)"; 
+      }, false); 
+    }); 
+
+    ["dragleave", "drop"].forEach((eventName) => { 
+      uploadBox.addEventListener(eventName, () => { 
+        uploadBox.style.borderColor = ""; 
+        uploadBox.style.background = ""; 
+      }, false); 
+    }); 
+
+    uploadBox.addEventListener("drop", function (e) { 
+      const dt = e.dataTransfer; 
+      const files = dt && dt.files; 
+      if (files && files.length > 0) { 
+        const file = files[0]; 
+        const reader = new FileReader(); 
+        reader.onload = function (evt) { 
+          parseAndSaveCsv(evt.target.result); 
+        }; 
+        reader.readAsText(file); 
+      } 
+    }); 
+  } 
 } 
  
 // ============================================================ 
 // LOGOUT HELPER 
 // ============================================================ 
  
-function logoutUser() { 
+async function logoutUser() { 
+  if (window.ExpenseGuardAuth && typeof window.ExpenseGuardAuth.signOut === "function") {
+    try {
+      await window.ExpenseGuardAuth.signOut();
+    } catch (e) {}
+  }
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.closeRealtime === "function") {
+    window.ExpenseGuardAPI.closeRealtime();
+  }
+
   localStorage.removeItem(LOGIN_KEY); 
- 
   localStorage.removeItem(CURRENT_USER_KEY); 
- 
-  window.location.href = "pages/signin.html"; 
+  sessionStorage.clear(); 
+
+  window.location.href = getPageRedirect("signin.html"); 
 } 
  
 // ============================================================ 
 // INITIALIZE EVERYTHING 
 // ============================================================ 
  
-document.addEventListener("DOMContentLoaded", function () { 
-  // Authentication 
- 
+// ============================================================ 
+// LOCALSTORAGE MIGRATION BANNER (CE-2)
+// ============================================================ 
+
+function initializeMigrationBanner() {
+  const banner = document.getElementById("migrationBanner");
+  const startBtn = document.getElementById("startMigrationBtn");
+  const dismissBtn = document.getElementById("dismissMigrationBtn");
+  const textEl = document.getElementById("migrationText");
+
+  if (!banner || !startBtn) return;
+
+  const dismissed = sessionStorage.getItem("expenseGuardMigrationDismissed") === "true";
+  if (dismissed) return;
+
+  const localData = getLocalTransactionsFallback();
+  if (!Array.isArray(localData) || localData.length === 0) {
+    banner.style.display = "none";
+    return;
+  }
+
+  if (textEl) {
+    textEl.textContent = `We found ${localData.length} saved transaction${localData.length === 1 ? "" : "s"} in your local browser storage. Would you like to migrate them to your cloud account?`;
+  }
+  banner.style.display = "block";
+
+  startBtn.addEventListener("click", async () => {
+    startBtn.disabled = true;
+    startBtn.textContent = "Migrating...";
+
+    try {
+      if (window.ExpenseGuardAPI) {
+        await window.ExpenseGuardAPI.importTransactions(localData);
+        localStorage.removeItem(STORAGE_KEY);
+        const userKey = getTransactionStorageKey();
+        if (userKey) localStorage.removeItem(userKey);
+
+        banner.style.display = "none";
+        toast(`Successfully migrated ${localData.length} transactions to cloud!`);
+        await fetchTransactions(true);
+        await updateDashboard();
+      }
+    } catch (err) {
+      alert("Migration failed: " + err.message);
+      startBtn.disabled = false;
+      startBtn.textContent = "⚡ Migrate to Cloud";
+    }
+  });
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener("click", () => {
+      banner.style.display = "none";
+      sessionStorage.setItem("expenseGuardMigrationDismissed", "true");
+    });
+  }
+}
+
+// ============================================================ 
+// REAL-TIME UPDATES (SSE)
+// ============================================================ 
+
+function initializeRealtimeUpdates() {
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.subscribeRealtime === "function") {
+    window.ExpenseGuardAPI.subscribeRealtime(async (event) => {
+      console.log("Real-time SSE event received:", event.type);
+      await fetchTransactions(true);
+      if (typeof updateDashboard === "function") updateDashboard();
+      if (typeof renderTransactions === "function") renderTransactions();
+      if (typeof window.renderAnomalies === "function") window.renderAnomalies();
+      if (typeof window.renderCategories === "function") window.renderCategories();
+      if (typeof window.renderBudgets === "function") window.renderBudgets();
+      if (typeof window.renderReports === "function") window.renderReports();
+      toast("Data updated in real time");
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async function () { 
+  // Authentication & Password Features 
+
+  initializePasswordToggles(); 
+
   initializeSignup(); 
- 
+
   initializeSignin(); 
  
   // Dashboard protection 
  
-  protectDashboard(); 
+  await protectDashboard(); 
  
   // Profile 
  
@@ -1128,13 +1916,24 @@ document.addEventListener("DOMContentLoaded", function () {
  
   initializeProfileDropdown(); 
  
-  // Transaction form 
+  // Mobile Navigation 
+  initializeMobileNav(); 
+ 
+  // Transaction form & CSV import 
  
   initializeTransactionForm(); 
  
+  initializeCsvUpload(); 
+
+  // Migration banner
+  initializeMigrationBanner();
+
+  // Real-time updates
+  initializeRealtimeUpdates();
+ 
   // Dashboard 
  
-  updateDashboard(); 
+  await updateDashboard(); 
 }); 
  
 // ============================================================ 
@@ -1199,6 +1998,163 @@ function closeTransactionModal() {
   const modal = document.getElementById("transactionModal"); 
   if (modal) { 
     modal.classList.remove("open"); 
+    modal.classList.remove("show"); 
   } 
+  currentDashboardTransactionId = null;
 } 
+
+function toast(message) {
+  const existing = document.querySelectorAll(".toast");
+  existing.forEach((t) => t.remove());
+
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = message;
+  document.body.appendChild(t);
+
+  setTimeout(() => {
+    t.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+    t.style.opacity = "0";
+    t.style.transform = "translateY(8px)";
+    setTimeout(() => t.remove(), 300);
+  }, 2200);
+}
+
+window.toast = toast;
+
+// ============================================================
+// DELETE TRANSACTION (GLOBAL STATE MANAGEMENT)
+// ============================================================
+
+let currentDashboardTransactionId = null;
+
+async function deleteTransaction(transactionId) {
+  if (transactionId == null) {
+    return;
+  }
+
+  const shouldConfirm = localStorage.getItem("expenseGuardSetting_confirmDelete") !== "false";
+  if (shouldConfirm) {
+    const confirmed = confirm(
+      "Are you sure you want to delete this transaction?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+  }
+
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.deleteTransaction === "function") {
+    try {
+      await window.ExpenseGuardAPI.deleteTransaction(transactionId);
+    } catch (apiErr) {
+      console.warn("API deleteTransaction error:", apiErr.message);
+    }
+  }
+
+  appTransactionsCache = appTransactionsCache.filter(function (transaction) {
+    return String(transaction.id) !== String(transactionId) && String(transaction._id) !== String(transactionId);
+  });
+
+  const stored = localStorage.getItem(STORAGE_KEY);
+  let transactions = [];
+  try {
+    transactions = stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    transactions = [];
+  }
+  const updatedTransactions = transactions.filter(function (transaction) {
+    return String(transaction.id) !== String(transactionId);
+  });
+  saveTransactions(updatedTransactions);
+
+  closeTransactionModal();
+
+  // If on transactions page
+  const detailModal = document.getElementById("transactionDetailModal");
+  if (detailModal) {
+    detailModal.classList.remove("show");
+  }
+
+  if (typeof renderTransactions === "function") {
+    renderTransactions();
+  }
+
+  // If on dashboard
+  if (typeof updateDashboard === "function") {
+    await updateDashboard();
+  }
+
+  toast("Transaction deleted");
+}
+
+function deleteCurrentDashboardTransaction() {
+  if (currentDashboardTransactionId != null) {
+    deleteTransaction(currentDashboardTransactionId);
+  }
+}
+
+window.deleteTransaction = deleteTransaction;
+window.deleteCurrentDashboardTransaction = deleteCurrentDashboardTransaction;
+
+// ============================================================
+// PRESENTATION DEMO DATASET
+// ============================================================
+
+function loadPresentationDemoData() {
+  const presentationDemoData = [
+    // --- UTILITIES (Normal Baseline) ---
+    { id: "tx_1", date: "2023-09-05", category: "Utilities", description: "Electricity Bill", amount: 1200 },
+    { id: "tx_2", date: "2023-10-05", category: "Utilities", description: "Electricity Bill", amount: 1250 },
+    { id: "tx_3", date: "2023-11-05", category: "Utilities", description: "Electricity Bill", amount: 1180 },
+
+    // --- SUBSCRIPTIONS (3 Normal, 1 HIGH RISK) ---
+    { id: "tx_4", date: "2023-08-01", category: "Subscriptions", description: "Streaming Service", amount: 500 },
+    { id: "tx_5", date: "2023-09-01", category: "Subscriptions", description: "Streaming Service", amount: 500 },
+    { id: "tx_6", date: "2023-10-01", category: "Subscriptions", description: "Streaming Service", amount: 500 },
+    { id: "tx_7", date: "2023-11-01", category: "Subscriptions", description: "Annual Software License", amount: 1999 }, // 🚨 High Risk (>3x Average)
+
+    // --- DINING OUT (4 Normal, 1 HIGH RISK) ---
+    { id: "tx_8", date: "2023-10-02", category: "Dining", description: "Cafe Lunch", amount: 800 },
+    { id: "tx_9", date: "2023-10-09", category: "Dining", description: "Dinner with friends", amount: 950 },
+    { id: "tx_10", date: "2023-10-16", category: "Dining", description: "Takeout", amount: 850 },
+    { id: "tx_11", date: "2023-10-23", category: "Dining", description: "Cafe Lunch", amount: 900 },
+    { id: "tx_12", date: "2023-10-30", category: "Dining", description: "Anniversary Fine Dining", amount: 4500 }, // 🚨 High Risk (>3x Average)
+
+    // --- SHOPPING (3 Normal, 1 HIGH RISK) ---
+    { id: "tx_13", date: "2023-09-10", category: "Shopping", description: "Clothing", amount: 1500 },
+    { id: "tx_14", date: "2023-10-12", category: "Shopping", description: "Shoes", amount: 1200 },
+    { id: "tx_15", date: "2023-11-02", category: "Shopping", description: "Home goods", amount: 1600 },
+    { id: "tx_16", date: "2023-11-15", category: "Shopping", description: "New Smartphone", amount: 5500 }, // 🚨 High Risk (>3x Average)
+
+    // --- GROCERIES (5 Normal, 1 MEDIUM RISK) ---
+    { id: "tx_17", date: "2023-10-03", category: "Groceries", description: "Supermarket", amount: 2000 },
+    { id: "tx_18", date: "2023-10-10", category: "Groceries", description: "Supermarket", amount: 2200 },
+    { id: "tx_19", date: "2023-10-17", category: "Groceries", description: "Supermarket", amount: 1800 },
+    { id: "tx_20", date: "2023-10-24", category: "Groceries", description: "Supermarket", amount: 2100 },
+    { id: "tx_21", date: "2023-10-31", category: "Groceries", description: "Supermarket", amount: 1900 },
+    { id: "tx_22", date: "2023-11-07", category: "Groceries", description: "Hosting Party Groceries", amount: 2380 }, // ⚠️ Medium Risk (Z-Score ~2.4)
+
+    // --- TRANSPORTATION (4 Normal, 1 MEDIUM RISK) ---
+    { id: "tx_23", date: "2023-10-04", category: "Transportation", description: "Cab Ride", amount: 350 },
+    { id: "tx_24", date: "2023-10-11", category: "Transportation", description: "Cab Ride", amount: 400 },
+    { id: "tx_25", date: "2023-10-18", category: "Transportation", description: "Cab Ride", amount: 320 },
+    { id: "tx_26", date: "2023-10-25", category: "Transportation", description: "Cab Ride", amount: 380 },
+    { id: "tx_27", date: "2023-11-08", category: "Transportation", description: "Cab Ride (Surge Pricing)", amount: 500 } // ⚠️ Medium Risk (Z-Score ~2.3)
+  ];
+
+  // 1. Save this specific array to localStorage
+  localStorage.setItem("expenseGuardTransactions", JSON.stringify(presentationDemoData));
+  if (typeof saveTransactions === "function") {
+    saveTransactions(presentationDemoData);
+  }
+
+  // 2. Alert the user and reload the page
+  alert("Full presentation demo data loaded! The dashboard is now populated.");
+  window.location.reload();
+}
+
+window.loadPresentationDemoData = loadPresentationDemoData;
+
+ 
  
