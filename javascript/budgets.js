@@ -90,7 +90,13 @@ document.addEventListener("DOMContentLoaded", function () {
     };
   }
 
-  renderBudgets();
+  if (typeof window.fetchTransactions === "function") {
+    window.fetchTransactions().then(() => renderBudgets());
+  } else {
+    renderBudgets();
+  }
+
+  window.renderBudgets = renderBudgets;
 });
 
 function toast(message) {

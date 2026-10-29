@@ -141,43 +141,96 @@ function getTransactionStorageKey() {
   return STORAGE_KEY;
 }
 
-function getTransactions() { 
-  const userKey = getTransactionStorageKey();
-  const data = localStorage.getItem(userKey); 
- 
-  if (data !== null) { 
-    try { 
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed)) {
-        return parsed;
-      }
-    } catch (error) { 
-      console.error("Error reading transactions:", error); 
-      return []; 
-    } 
-  } 
+// In-memory cache for API transactions
+let appTransactionsCache = [];
+let isTransactionsLoaded = false;
 
-  // Legacy fallback if user key was not explicitly initialized
-  if (userKey !== STORAGE_KEY) {
-    const globalData = localStorage.getItem(STORAGE_KEY);
-    if (globalData !== null) {
-      try {
-        const parsedGlobal = JSON.parse(globalData);
-        if (Array.isArray(parsedGlobal)) {
-          return parsedGlobal;
-        }
-      } catch (e) {}
+function getLocalTransactionsFallback() {
+  const userKey = getTransactionStorageKey();
+  const data = localStorage.getItem(userKey);
+  if (data !== null) {
+    try {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  const globalData = localStorage.getItem(STORAGE_KEY);
+  if (globalData !== null) {
+    try {
+      const parsedGlobal = JSON.parse(globalData);
+      if (Array.isArray(parsedGlobal)) return parsedGlobal;
+    } catch (e) {}
+  }
+  return [];
+}
+
+async function fetchTransactions(force = false) {
+  if (isTransactionsLoaded && !force) {
+    return appTransactionsCache;
+  }
+
+  // Ensure Firebase Auth state has completed before making API calls
+  if (window.ExpenseGuardAuth && typeof window.ExpenseGuardAuth.waitForAuth === "function") {
+    try {
+      await window.ExpenseGuardAuth.waitForAuth();
+    } catch (e) {
+      console.warn("waitForAuth error in fetchTransactions:", e);
     }
   }
- 
-  return []; 
+
+  const isAuthUser = Boolean(
+    window.ExpenseGuardAuth &&
+    typeof window.ExpenseGuardAuth.getCurrentUser === "function" &&
+    window.ExpenseGuardAuth.getCurrentUser()
+  );
+
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.getTransactions === "function") {
+    try {
+      const apiData = await window.ExpenseGuardAPI.getTransactions();
+      if (Array.isArray(apiData)) {
+        appTransactionsCache = apiData;
+        isTransactionsLoaded = true;
+        return appTransactionsCache;
+      }
+    } catch (err) {
+      console.warn("Could not fetch transactions from API:", err.message);
+      if (isAuthUser) {
+        // Authenticated user API error - do NOT fall back to dummy local storage
+        appTransactionsCache = [];
+        isTransactionsLoaded = true;
+        return appTransactionsCache;
+      }
+    }
+  }
+
+  // Fallback to local data only if user is not authenticated or API is unavailable
+  if (!isAuthUser) {
+    appTransactionsCache = getLocalTransactionsFallback();
+  } else {
+    appTransactionsCache = [];
+  }
+  isTransactionsLoaded = true;
+  return appTransactionsCache;
+}
+
+function getTransactions() { 
+  if (isTransactionsLoaded) { 
+    return appTransactionsCache; 
+  } 
+  return getLocalTransactionsFallback(); 
 } 
  
 function saveTransactions(transactions) { 
+  appTransactionsCache = Array.isArray(transactions) ? transactions : [];
+  isTransactionsLoaded = true;
   const userKey = getTransactionStorageKey();
   localStorage.setItem(userKey, JSON.stringify(transactions)); 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions)); 
 } 
+
+window.fetchTransactions = fetchTransactions;
+window.getTransactions = getTransactions;
+window.saveTransactions = saveTransactions;
  
 // ============================================================ 
 // DATE FORMAT 
@@ -399,25 +452,41 @@ window.analyzeTransactions = analyzeTransactions;
 // ADD TRANSACTION 
 // ============================================================ 
  
-function addTransaction(transactionData) { 
+async function addTransaction(transactionData) { 
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.createTransaction === "function") {
+    try {
+      const created = await window.ExpenseGuardAPI.createTransaction({
+        date: transactionData.date,
+        category: transactionData.category,
+        description: transactionData.description,
+        amount: Number(transactionData.amount),
+        isRecurring: Boolean(transactionData.isRecurring),
+        paymentMethod: transactionData.paymentMethod || "Other",
+        tags: transactionData.tags || [],
+      });
+      // Deduplicate before unshifting into cache
+      const createdId = (created.id || created._id)?.toString();
+      appTransactionsCache = appTransactionsCache.filter(t => (t.id || t._id)?.toString() !== createdId);
+      appTransactionsCache.unshift(created);
+      isTransactionsLoaded = true;
+      return created;
+    } catch (err) {
+      console.error("API addTransaction failed:", err);
+      throw err;
+    }
+  }
+
+  // Fallback if API unavailable
   const transactions = getTransactions(); 
- 
   const transaction = { 
     id: Date.now(), 
- 
     date: transactionData.date, 
- 
     category: transactionData.category, 
- 
     description: transactionData.description, 
- 
     amount: Number(transactionData.amount), 
   }; 
- 
-  transactions.push(transaction); 
- 
+  transactions.unshift(transaction); 
   saveTransactions(transactions); 
- 
   return transaction; 
 } 
  
@@ -460,8 +529,9 @@ function loadProfileInformation() {
   const showName = localStorage.getItem("expenseGuardSetting_showName") !== "false";
   const showEmail = localStorage.getItem("expenseGuardSetting_showEmail") !== "false";
 
-  const rawName = user?.name || localStorage.getItem("expenseGuardSetting_name") || "My Account";
+  const rawName = user?.name || user?.displayName || localStorage.getItem("expenseGuardSetting_name") || "My Account";
   const rawEmail = user?.email || localStorage.getItem("expenseGuardSetting_email") || (user ? "" : "Not signed in");
+  const photoURL = user?.photoURL || "";
 
   const name = showName ? rawName : "User";
   const email = showEmail ? rawEmail : "••••@••••.com";
@@ -493,7 +563,13 @@ function loadProfileInformation() {
  
   Object.entries(targets).forEach(([id, val]) => { 
     const el = document.getElementById(id); 
-    if (el) el.textContent = val; 
+    if (!el) return;
+
+    if (photoURL && (id === "profileInitials" || id === "dropdownInitials" || id === "bigInitials")) {
+      el.innerHTML = `<img src="${photoURL}" alt="${escapeHTML(name)}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.onerror=null; this.parentElement.textContent='${initials}'">`;
+    } else {
+      el.textContent = val; 
+    }
   }); 
 } 
  
@@ -559,17 +635,24 @@ function initializeProfileDropdown() {
   // -------------------------------------------------------- 
  
   if (logoutButton) { 
-    logoutButton.addEventListener("click", function (event) { 
+    logoutButton.addEventListener("click", async function (event) { 
       event.preventDefault(); 
- 
       event.stopPropagation(); 
- 
+
+      if (window.ExpenseGuardAuth && typeof window.ExpenseGuardAuth.signOut === "function") {
+        try {
+          await window.ExpenseGuardAuth.signOut();
+        } catch (e) {}
+      }
+
+      if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.closeRealtime === "function") {
+        window.ExpenseGuardAPI.closeRealtime();
+      }
+
       localStorage.removeItem(LOGIN_KEY); 
- 
       localStorage.removeItem(CURRENT_USER_KEY); 
- 
       sessionStorage.clear(); 
- 
+
       window.location.replace(getPageRedirect("welcome.html")); 
     }); 
   } 
@@ -1031,11 +1114,10 @@ function initializeSignin() {
 // PROTECT PAGES 
 // ============================================================ 
  
-function protectDashboard() { 
+async function protectDashboard() { 
   const currentPage = 
     window.location.pathname.split("/").pop() || "index.html"; 
  
-  // Pages that require the user to be logged in 
   const protectedPages = [ 
     "dashboard.html", 
     "transactions.html", 
@@ -1046,17 +1128,41 @@ function protectDashboard() {
     "profile.html", 
     "settings.html", 
   ]; 
- 
-  // If the current page is protected and user is logged out 
+
+  const authPages = ["signin.html", "signup.html"];
+
+  // Asynchronous Firebase Authentication state handling
+  if (window.ExpenseGuardAuth) {
+    if (window.ExpenseGuardAuth.isConfigured()) {
+      const user = await window.ExpenseGuardAuth.waitForAuth();
+
+      // Protected pages: redirect to sign-in if unauthenticated
+      if (protectedPages.includes(currentPage) && !user) {
+        if (currentPage === "dashboard.html") {
+          window.location.replace("pages/signin.html");
+        } else {
+          window.location.replace("signin.html");
+        }
+        return;
+      }
+
+      // Auth pages: redirect to dashboard if authenticated
+      if (authPages.includes(currentPage) && user) {
+        window.location.replace("../dashboard.html");
+        return;
+      }
+
+      return;
+    }
+  }
+
+  // Fallback for offline / placeholder state
   if (protectedPages.includes(currentPage) && !isLoggedIn()) { 
-    // dashboard.html is in the root folder 
     if (currentPage === "dashboard.html") { 
       window.location.replace("pages/signin.html"); 
     } else { 
-      // Other protected pages are inside /pages/ 
       window.location.replace("signin.html"); 
     } 
- 
     return; 
   } 
 } 
@@ -1071,8 +1177,13 @@ window.addEventListener("pageshow", function (event) {
 // DASHBOARD UPDATE 
 // ============================================================ 
  
-function updateDashboard() { 
-  const transactions = getTransactions(); 
+async function updateDashboard() { 
+  let transactions = [];
+  try {
+    transactions = await fetchTransactions();
+  } catch (err) {
+    transactions = getTransactions();
+  }
  
   const analyzed = analyzeTransactions(transactions); 
  
@@ -1081,12 +1192,11 @@ function updateDashboard() {
   // -------------------------------------------------------- 
  
   const total = transactions.reduce( 
-    (sum, transaction) => sum + Number(transaction.amount), 
+    (sum, transaction) => sum + Number(transaction.amount || 0), 
     0, 
   ); 
  
   const totalElement = document.getElementById("totalSpending"); 
- 
   if (totalElement) { 
     totalElement.textContent = "₹" + total.toLocaleString("en-IN"); 
   } 
@@ -1096,7 +1206,6 @@ function updateDashboard() {
   // -------------------------------------------------------- 
  
   const transactionCount = document.getElementById("transactionCount"); 
- 
   if (transactionCount) { 
     transactionCount.textContent = transactions.length; 
   } 
@@ -1108,13 +1217,11 @@ function updateDashboard() {
   const anomalies = analyzed.filter((transaction) => transaction.isAnomaly); 
  
   const anomalyCount = document.getElementById("anomalyCount"); 
- 
   if (anomalyCount) { 
     anomalyCount.textContent = anomalies.length; 
   } 
  
   const anomalyMessage = document.getElementById("anomalyMessage"); 
- 
   if (anomalyMessage) { 
     if (anomalies.length > 0) { 
       anomalyMessage.textContent = 
@@ -1134,7 +1241,6 @@ function updateDashboard() {
   const average = transactions.length > 0 ? total / transactions.length : 0; 
  
   const averageElement = document.getElementById("averageExpense"); 
- 
   if (averageElement) { 
     averageElement.textContent = 
       "₹" + Math.round(average).toLocaleString("en-IN"); 
@@ -1145,9 +1251,7 @@ function updateDashboard() {
   // -------------------------------------------------------- 
  
   updateRecentTransactions(analyzed); 
- 
   updateDashboardAnomalies(anomalies); 
- 
   updateCategorySpending(transactions); 
 } 
  
@@ -1164,7 +1268,8 @@ function updateRecentTransactions(transactions) {
  
   tableBody.innerHTML = ""; 
  
-  const recent = [...transactions].reverse().slice(0, 5); 
+  const sorted = [...transactions].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  const recent = sorted.slice(0, 5); 
  
   if (recent.length === 0) { 
     tableBody.innerHTML = ` 
@@ -1272,9 +1377,9 @@ function updateDashboardAnomalies(anomalies) {
     return; 
   } 
  
-  anomalies 
-    .slice() 
-    .reverse() 
+  const sortedAnomalies = [...anomalies].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  sortedAnomalies 
+    .slice(0, 4) 
     .forEach((transaction) => { 
       const box = document.createElement("div"); 
  
@@ -1425,69 +1530,62 @@ function initializeTransactionForm() {
   if (!form) { 
     return; 
   } 
+
+  let isSubmitting = false;
  
-  form.addEventListener("submit", function (event) { 
+  form.addEventListener("submit", async function (event) { 
     event.preventDefault(); 
+    if (isSubmitting) return;
  
     const date = document.getElementById("transactionDate").value; 
- 
     const category = document.getElementById("transactionCategory").value; 
- 
-    const description = document 
-      .getElementById("transactionDescription") 
-      .value.trim(); 
- 
+    const description = document.getElementById("transactionDescription").value.trim(); 
     const amount = Number(document.getElementById("transactionAmount").value); 
  
-    // ------------------------------------------------ 
-    // VALIDATION 
-    // ------------------------------------------------ 
- 
+    // Validation 
     if (!date) { 
       alert("Please select a date."); 
- 
       return; 
     } 
  
     if (!description) { 
       alert("Please enter a description."); 
- 
       return; 
     } 
  
     if (!amount || amount <= 0) { 
       alert("Please enter a valid amount."); 
- 
       return; 
     } 
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : "+ Add Expense";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
+    }
+    isSubmitting = true;
  
-    // ------------------------------------------------ 
-    // SAVE 
-    // ------------------------------------------------ 
- 
-    addTransaction({ 
-      date: date, 
- 
-      category: category, 
- 
-      description: description, 
- 
-      amount: amount, 
-    }); 
- 
-    // ------------------------------------------------ 
-    // RESET 
-    // ------------------------------------------------ 
- 
-    form.reset(); 
- 
-    alert("Transaction added successfully!"); 
- 
-    // ------------------------------------------------ 
-    // UPDATE DASHBOARD 
-    // ------------------------------------------------ 
- 
-    updateDashboard(); 
+    try {
+      await addTransaction({ 
+        date: date, 
+        category: category, 
+        description: description, 
+        amount: amount, 
+      }); 
+
+      form.reset(); 
+      toast("Transaction added to database!"); 
+      await updateDashboard(); 
+    } catch (err) {
+      alert("Error saving transaction: " + (err.message || "Network error"));
+    } finally {
+      isSubmitting = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
   }); 
 } 
  
@@ -1566,6 +1664,7 @@ function initializeCsvUpload() {
       } 
 
       const existing = getTransactions(); 
+      const newParsedTxs = [];
       let importedCount = 0; 
 
       for (let i = startLine; i < lines.length; i++) { 
@@ -1600,8 +1699,7 @@ function initializeCsvUpload() {
         } 
 
         if (Number.isFinite(amount) && amount > 0) { 
-          existing.push({ 
-            id: "tx_csv_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5), 
+          newParsedTxs.push({ 
             date: date, 
             category: category, 
             description: description, 
@@ -1612,10 +1710,23 @@ function initializeCsvUpload() {
       } 
 
       if (importedCount > 0) { 
-        saveTransactions(existing); 
-        if (typeof updateDashboard === "function") updateDashboard(); 
-        if (typeof renderTransactions === "function") renderTransactions(); 
-        alert(`Successfully imported ${importedCount} transaction${importedCount === 1 ? "" : "s"} from CSV!`); 
+        (async () => {
+          if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.importTransactions === "function") {
+            try {
+              await window.ExpenseGuardAPI.importTransactions(newParsedTxs);
+              await fetchTransactions(true);
+            } catch (apiErr) {
+              console.warn("Could not batch import via API, saving to local fallback:", apiErr);
+              saveTransactions([...existing, ...newParsedTxs]);
+            }
+          } else {
+            saveTransactions([...existing, ...newParsedTxs]);
+          }
+
+          if (typeof updateDashboard === "function") await updateDashboard(); 
+          if (typeof renderTransactions === "function") renderTransactions(); 
+          alert(`Successfully imported ${importedCount} transaction${importedCount === 1 ? "" : "s"} from CSV!`); 
+        })();
       } else { 
         alert("No valid transactions found in CSV file."); 
       } 
@@ -1688,13 +1799,20 @@ function initializeCsvUpload() {
 // LOGOUT HELPER 
 // ============================================================ 
  
-function logoutUser() { 
+async function logoutUser() { 
+  if (window.ExpenseGuardAuth && typeof window.ExpenseGuardAuth.signOut === "function") {
+    try {
+      await window.ExpenseGuardAuth.signOut();
+    } catch (e) {}
+  }
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.closeRealtime === "function") {
+    window.ExpenseGuardAPI.closeRealtime();
+  }
+
   localStorage.removeItem(LOGIN_KEY); 
- 
   localStorage.removeItem(CURRENT_USER_KEY); 
- 
   sessionStorage.clear(); 
- 
+
   window.location.href = getPageRedirect("signin.html"); 
 } 
  
@@ -1702,7 +1820,84 @@ function logoutUser() {
 // INITIALIZE EVERYTHING 
 // ============================================================ 
  
-document.addEventListener("DOMContentLoaded", function () { 
+// ============================================================ 
+// LOCALSTORAGE MIGRATION BANNER (CE-2)
+// ============================================================ 
+
+function initializeMigrationBanner() {
+  const banner = document.getElementById("migrationBanner");
+  const startBtn = document.getElementById("startMigrationBtn");
+  const dismissBtn = document.getElementById("dismissMigrationBtn");
+  const textEl = document.getElementById("migrationText");
+
+  if (!banner || !startBtn) return;
+
+  const dismissed = sessionStorage.getItem("expenseGuardMigrationDismissed") === "true";
+  if (dismissed) return;
+
+  const localData = getLocalTransactionsFallback();
+  if (!Array.isArray(localData) || localData.length === 0) {
+    banner.style.display = "none";
+    return;
+  }
+
+  if (textEl) {
+    textEl.textContent = `We found ${localData.length} saved transaction${localData.length === 1 ? "" : "s"} in your local browser storage. Would you like to migrate them to your cloud account?`;
+  }
+  banner.style.display = "block";
+
+  startBtn.addEventListener("click", async () => {
+    startBtn.disabled = true;
+    startBtn.textContent = "Migrating...";
+
+    try {
+      if (window.ExpenseGuardAPI) {
+        await window.ExpenseGuardAPI.importTransactions(localData);
+        localStorage.removeItem(STORAGE_KEY);
+        const userKey = getTransactionStorageKey();
+        if (userKey) localStorage.removeItem(userKey);
+
+        banner.style.display = "none";
+        toast(`Successfully migrated ${localData.length} transactions to cloud!`);
+        await fetchTransactions(true);
+        await updateDashboard();
+      }
+    } catch (err) {
+      alert("Migration failed: " + err.message);
+      startBtn.disabled = false;
+      startBtn.textContent = "⚡ Migrate to Cloud";
+    }
+  });
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener("click", () => {
+      banner.style.display = "none";
+      sessionStorage.setItem("expenseGuardMigrationDismissed", "true");
+    });
+  }
+}
+
+// ============================================================ 
+// REAL-TIME UPDATES (SSE)
+// ============================================================ 
+
+function initializeRealtimeUpdates() {
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.subscribeRealtime === "function") {
+    window.ExpenseGuardAPI.subscribeRealtime(async (event) => {
+      console.log("Real-time SSE event received:", event.type);
+      await fetchTransactions(true);
+      if (typeof updateDashboard === "function") updateDashboard();
+      if (typeof renderTransactions === "function") renderTransactions();
+      if (typeof window.renderAnomalies === "function") window.renderAnomalies();
+      if (typeof window.renderCategories === "function") window.renderCategories();
+      if (typeof window.renderBudgets === "function") window.renderBudgets();
+      if (typeof window.renderReports === "function") window.renderReports();
+      toast("Data updated in real time");
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async function () { 
   // Authentication & Password Features 
 
   initializePasswordToggles(); 
@@ -1713,7 +1908,7 @@ document.addEventListener("DOMContentLoaded", function () {
  
   // Dashboard protection 
  
-  protectDashboard(); 
+  await protectDashboard(); 
  
   // Profile 
  
@@ -1729,10 +1924,16 @@ document.addEventListener("DOMContentLoaded", function () {
   initializeTransactionForm(); 
  
   initializeCsvUpload(); 
+
+  // Migration banner
+  initializeMigrationBanner();
+
+  // Real-time updates
+  initializeRealtimeUpdates();
  
   // Dashboard 
  
-  updateDashboard(); 
+  await updateDashboard(); 
 }); 
  
 // ============================================================ 
@@ -1827,7 +2028,7 @@ window.toast = toast;
 
 let currentDashboardTransactionId = null;
 
-function deleteTransaction(transactionId) {
+async function deleteTransaction(transactionId) {
   if (transactionId == null) {
     return;
   }
@@ -1843,21 +2044,28 @@ function deleteTransaction(transactionId) {
     }
   }
 
+  if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.deleteTransaction === "function") {
+    try {
+      await window.ExpenseGuardAPI.deleteTransaction(transactionId);
+    } catch (apiErr) {
+      console.warn("API deleteTransaction error:", apiErr.message);
+    }
+  }
+
+  appTransactionsCache = appTransactionsCache.filter(function (transaction) {
+    return String(transaction.id) !== String(transactionId) && String(transaction._id) !== String(transactionId);
+  });
+
   const stored = localStorage.getItem(STORAGE_KEY);
   let transactions = [];
   try {
     transactions = stored ? JSON.parse(stored) : [];
-    if (!Array.isArray(transactions)) {
-      transactions = [];
-    }
   } catch (error) {
     transactions = [];
   }
-
   const updatedTransactions = transactions.filter(function (transaction) {
     return String(transaction.id) !== String(transactionId);
   });
-
   saveTransactions(updatedTransactions);
 
   closeTransactionModal();
@@ -1874,8 +2082,10 @@ function deleteTransaction(transactionId) {
 
   // If on dashboard
   if (typeof updateDashboard === "function") {
-    updateDashboard();
+    await updateDashboard();
   }
+
+  toast("Transaction deleted");
 }
 
 function deleteCurrentDashboardTransaction() {

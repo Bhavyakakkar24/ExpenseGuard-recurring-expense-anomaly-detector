@@ -2,11 +2,7 @@
 // EXPENSEGUARD — REPORTS JAVASCRIPT
 // ============================================================
 
-document.addEventListener("DOMContentLoaded", function () {
-  if (typeof rememberLastPage === "function") {
-    rememberLastPage("reports");
-  }
-
+function renderReports() {
   const tx = typeof getTransactions === "function" ? getTransactions() : [];
   const amounts = tx.map((t) => Number(t.amount) || 0);
   const total = amounts.reduce((s, n) => s + n, 0);
@@ -116,6 +112,20 @@ document.addEventListener("DOMContentLoaded", function () {
       a.click();
       toast("Report exported");
     };
+  }
+}
+
+window.renderReports = renderReports;
+
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof rememberLastPage === "function") {
+    rememberLastPage("reports");
+  }
+
+  if (typeof window.fetchTransactions === "function") {
+    window.fetchTransactions().then(renderReports);
+  } else {
+    renderReports();
   }
 });
 

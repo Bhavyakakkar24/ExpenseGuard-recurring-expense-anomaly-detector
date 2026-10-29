@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", function () {
     rememberLastPage("settings");
   }
 
+  if (typeof window.fetchTransactions === "function") {
+    window.fetchTransactions().catch(() => {});
+  }
+
   const currentUser =
     typeof getCurrentUser === "function" ? getCurrentUser() : null;
   const name =

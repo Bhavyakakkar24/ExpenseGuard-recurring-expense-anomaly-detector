@@ -105,22 +105,29 @@
           <div id="monthReport"></div>
         </section>
       </main>
-    </div>
+    <script type="module" src="../javascript/firebase-auth.js"></script>
+    <script src="../javascript/api.js"></script>
     <script src="../javascript/app.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        if (typeof rememberLastPage === "function") rememberLastPage("reports");
+      async function renderReports() {
         const tx =
-          typeof getTransactions === "function" ? getTransactions() : [];
+          typeof window.fetchTransactions === "function"
+            ? await window.fetchTransactions()
+            : typeof getTransactions === "function"
+              ? getTransactions()
+              : [];
         const amounts = tx.map((t) => Number(t.amount) || 0);
         const total = amounts.reduce((s, n) => s + n, 0);
-        document.getElementById("rTotal").textContent =
-          "₹" + total.toLocaleString("en-IN");
-        document.getElementById("rAvg").textContent =
-          "₹" + (amounts.length ? total / amounts.length : 0).toFixed(0);
-        document.getElementById("rHigh").textContent =
-          "₹" +
-          (amounts.length ? Math.max(...amounts) : 0).toLocaleString("en-IN");
+        const rTotalEl = document.getElementById("rTotal");
+        const rAvgEl = document.getElementById("rAvg");
+        const rHighEl = document.getElementById("rHigh");
+        const rTopEl = document.getElementById("rTop");
+        if (rTotalEl) rTotalEl.textContent = "₹" + total.toLocaleString("en-IN");
+        if (rAvgEl) rAvgEl.textContent = "₹" + (amounts.length ? total / amounts.length : 0).toFixed(0);
+        if (rHighEl)
+          rHighEl.textContent =
+            "₹" + (amounts.length ? Math.max(...amounts) : 0).toLocaleString("en-IN");
+
         const byCat = {};
         tx.forEach(
           (t) =>
@@ -128,27 +135,32 @@
               (byCat[t.category] || 0) + Number(t.amount || 0)),
         );
         const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
-        document.getElementById("rTop").textContent = cats[0]?.[0] || "—";
+        if (rTopEl) rTopEl.textContent = cats[0]?.[0] || "—";
         const catBox = document.getElementById("categoryReport");
-        catBox.innerHTML = cats.length
-          ? cats
-              .map(([c, v]) => {
-                const pct = total ? (v / total) * 100 : 0;
-                return `<div class="category"><div class="category-top"><span class="category-name">${c}</span><span class="category-amount">₹${v.toLocaleString("en-IN")} · ${pct.toFixed(0)}%</span></div><div class="progress"><div class="progress-bar" style="width:${pct}%"></div></div></div>`;
-              })
-              .join("")
-          : `<div class="empty-state">No transactions yet.</div>`;
+        if (catBox) {
+          catBox.innerHTML = cats.length
+            ? cats
+                .map(([c, v]) => {
+                  const pct = total ? (v / total) * 100 : 0;
+                  return `<div class="category"><div class="category-top"><span class="category-name">${c}</span><span class="category-amount">₹${v.toLocaleString("en-IN")} · ${pct.toFixed(0)}%</span></div><div class="progress"><div class="progress-bar" style="width:${pct}%"></div></div></div>`;
+                })
+                .join("")
+            : `<div class="empty-state">No transactions yet.</div>`;
+        }
         const top = [...tx]
           .sort((a, b) => Number(b.amount) - Number(a.amount))
           .slice(0, 5);
-        document.getElementById("topTransactions").innerHTML = top.length
-          ? top
-              .map(
-                (t, i) =>
-                  `<div class="security-item"><div class="security-icon">${i + 1}</div><div><strong>${t.description || "Expense"}</strong><span>${t.category} · ${t.date || ""}</span></div><strong style="margin-left:auto">₹${Number(t.amount).toLocaleString("en-IN")}</strong></div>`,
-              )
-              .join("")
-          : `<div class="empty-state">No transactions yet.</div>`;
+        const topBox = document.getElementById("topTransactions");
+        if (topBox) {
+          topBox.innerHTML = top.length
+            ? top
+                .map(
+                  (t, i) =>
+                    `<div class="security-item"><div class="security-icon">${i + 1}</div><div><strong>${t.description || "Expense"}</strong><span>${t.category} · ${t.date || ""}</span></div><strong style="margin-left:auto">₹${Number(t.amount).toLocaleString("en-IN")}</strong></div>`,
+                )
+                .join("")
+            : `<div class="empty-state">No transactions yet.</div>`;
+        }
         const months = {};
         tx.forEach((t) => {
           const key = (t.date || "").slice(0, 7) || "Unknown";
@@ -157,20 +169,35 @@
         let monthHtml = "";
         for (const [m, v] of Object.entries(months).sort().reverse())
           monthHtml += `<div class="settings-row"><div><div class="settings-row-title">${m}</div><div class="settings-row-sub">Recorded spending for this month</div></div><strong>₹${v.toLocaleString("en-IN")}</strong></div>`;
-        document.getElementById("monthReport").innerHTML =
-          monthHtml ||
-          `<div class="empty-state">Add a transaction to generate a report.</div>`;
-        document.getElementById("exportReport").onclick = () => {
-          const data = `ExpenseGuard Report\\nTotal Spending,₹${total}\\nAverage,₹${amounts.length ? total / amounts.length : 0}\\nTop Category,${cats[0]?.[0] || "—"}\\nHighest Expense,₹${amounts.length ? Math.max(...amounts) : 0}`;
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(
-            new Blob([data], { type: "text/plain" }),
-          );
-          a.download = "expenseguard-report.txt";
-          a.click();
-          toast("Report exported");
-        };
+        const monthBox = document.getElementById("monthReport");
+        if (monthBox) {
+          monthBox.innerHTML =
+            monthHtml ||
+            `<div class="empty-state">Add a transaction to generate a report.</div>`;
+        }
+
+        const exportBtn = document.getElementById("exportReport");
+        if (exportBtn) {
+          exportBtn.onclick = () => {
+            const data = `ExpenseGuard Report\nTotal Spending,₹${total}\nAverage,₹${amounts.length ? total / amounts.length : 0}\nTop Category,${cats[0]?.[0] || "—"}\nHighest Expense,₹${amounts.length ? Math.max(...amounts) : 0}`;
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(
+              new Blob([data], { type: "text/plain" }),
+            );
+            a.download = "expenseguard-report.txt";
+            a.click();
+            toast("Report exported");
+          };
+        }
+      }
+
+      window.renderReports = renderReports;
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        if (typeof rememberLastPage === "function") rememberLastPage("reports");
+        await renderReports();
       });
+
       function toast(m) {
         const t = document.createElement("div");
         t.className = "toast";
@@ -179,6 +206,5 @@
         setTimeout(() => t.remove(), 2200);
       }
     </script>
-    <script src="../javascript/app.js"></script>
   </body>
 </html>

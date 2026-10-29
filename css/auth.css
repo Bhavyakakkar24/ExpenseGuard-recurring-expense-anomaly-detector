@@ -521,3 +521,117 @@ html[data-theme="light"] .auth-switch a:hover {
     font-size: 22px;
   }
 }
+
+/* ============================================================
+   GOOGLE AUTHENTICATION (CE-2)
+============================================================ */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  text-align: center;
+  color: var(--muted, #91a6bf);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--line, #234367);
+}
+
+.auth-divider span {
+  padding: 0 12px;
+}
+
+.google-auth-btn {
+  width: 100%;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid var(--line, #2a4c73);
+  border-radius: 10px;
+  background: rgba(15, 35, 66, 0.85);
+  color: var(--heading, #f8fafc);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.google-auth-btn:hover {
+  background: rgba(30, 60, 105, 0.95);
+  border-color: var(--indigo, #4f7cff);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(79, 124, 255, 0.22);
+  color: #ffffff;
+}
+
+.google-auth-btn:active {
+  transform: translateY(0);
+}
+
+.google-auth-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.google-auth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Firebase Warning / Setup Notice Banner */
+.firebase-config-notice {
+  background: rgba(246, 166, 35, 0.12);
+  border: 1px solid rgba(246, 166, 35, 0.35);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #fbd38d;
+  display: none;
+}
+
+.firebase-config-notice strong {
+  color: #f6a623;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Light theme overrides for Google button */
+html[data-theme="light"] .google-auth-btn {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+
+html[data-theme="light"] .google-auth-btn:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+html[data-theme="light"] .auth-divider::before,
+html[data-theme="light"] .auth-divider::after {
+  border-color: #e2e8f0 !important;
+}
+
+html[data-theme="light"] .auth-divider {
+  color: #64748b !important;
+}

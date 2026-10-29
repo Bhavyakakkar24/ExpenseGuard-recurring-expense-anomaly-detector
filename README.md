@@ -1,178 +1,344 @@
-# ExpenseGuard — Recurring Expense Anomaly Detector
+# ExpenseGuard — Recurring Expense Anomaly Detector (CE-2)
 
-ExpenseGuard is a modern, web-based expense management and statistical anomaly detection application designed to help users track expenses, organize spending by category, set category budgets, generate financial reports, and automatically detect unusual spending patterns.
-
-🌍 **Live Demo:** [View Live on Vercel](https://expense-guard-recurring-expense-ano.vercel.app/)
+ExpenseGuard is an intelligent, full-stack expense management and statistical anomaly detection application. Built for **Continuous Evaluation 2 (CE-2)**, this release upgrades the system from a client-only prototype to an enterprise-grade full-stack architecture featuring **real Google Authentication (Firebase Modular SDK)**, a persistent **MongoDB Atlas cloud database (Mongoose ODM)**, secure **Express.js REST APIs with Firebase Admin token verification**, and **real-time synchronization (Server-Sent Events)** across active browser sessions.
 
 ---
 
-## 🚀 Local Development (How to Run Locally)
+## 🏛️ System Architecture: CE-1 vs CE-2
 
-If you want to run the project locally on your machine, you can use any of the following methods:
+| Layer | Continuous Evaluation 1 (CE-1) | Continuous Evaluation 2 (CE-2) |
+| :--- | :--- | :--- |
+| **Frontend UI** | Vanilla HTML, CSS, JavaScript | **Preserved:** Same dark navy aesthetic, layout, and components |
+| **Authentication** | Simulated `localStorage` credentials | **Real Firebase Google Auth:** Popup sign-in via Modular Firebase v10 SDK |
+| **Backend API** | None (Static files / Python server) | **Node.js & Express.js REST API:** JSON parsing, centralized error handling |
+| **Token Verification** | None | **Firebase Admin SDK:** Verifies `Bearer <id_token>` on all protected routes |
+| **Database** | Browser `localStorage` (ephemeral) | **MongoDB Atlas & Mongoose:** Persistent, indexed, schema-validated cloud storage |
+| **Data Isolation** | Single-browser local isolation | **Multi-tenant isolation:** Every DB query scoped by verified `req.user.uid` |
+| **Real-time Sync** | Manual page reload | **Server-Sent Events (SSE):** Instant updates across multiple open browser tabs |
+| **Legacy Data** | Manual LocalStorage entries | **User-Initiated Migration:** Safe one-click import banner associating records to owner |
+| **Testing** | Manual browser checks | **Automated Integration Tests:** 21 automated tests via Node test runner & Supertest |
 
-**Option 1: Using Python HTTP Server (Recommended)**
+---
+
+## 🚀 Quick Start (Installation & Execution)
+
+### 1. Prerequisites
+- **Node.js** v18.0.0 or higher (`node -v`)
+- **npm** v9.0.0 or higher
+- A **MongoDB Atlas** cluster (or local MongoDB running on port 27017)
+- A **Firebase Project** with Google Authentication enabled
+
+### 2. Installation
+Navigate to the project root and install all dependencies:
 ```bash
-# Navigate to the project root directory
-cd recurring-expense-anomaly-detector-main
-
-# Start a local web server
-python -m http.server 8000
+npm install
 ```
-Then open your browser and navigate to: `http://localhost:8000/`
 
-**Option 2: Using VS Code Live Server**
-1. Open the project folder in VS Code.
-2. Right-click `index.html` or `pages/welcome.html`.
-3. Select **Open with Live Server**.
+### 3. Environment Configuration
+Copy `.env.example` to create your active `.env` file:
+```bash
+cp .env.example .env
+```
+*(On Windows PowerShell: `Copy-Item .env.example .env`)*
 
-**Option 3: Direct Browser Access**
-* Double-click `index.html` in your file explorer to open directly in any modern web browser.
+Configure your environment variables in `.env`:
+```env
+PORT=5000
+NODE_ENV=development
 
----
+# MongoDB Atlas Connection String
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/expenseguard?retryWrites=true&w=majority
 
-## 📌 Project Overview
+# Firebase Admin SDK (Option A: file path, Option B: inline JSON)
+FIREBASE_SERVICE_ACCOUNT_PATH=./server/config/serviceAccountKey.json
+# FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
+```
 
-Managing recurring expenses can make it difficult to spot subtle or unexpected spending anomalies. ExpenseGuard provides an intuitive, responsive interface with a dark navy finance aesthetic where users can:
-* **Track Expenses:** Record dates, categories, descriptions, and amounts.
-* **Import/Export Data:** Upload CSV expense logs or export records for external analysis.
-* **Smart Category Breakdown:** Group spending dynamically using JavaScript data structures and visualizations.
-* **Budget Health Tracking:** Set monthly limits per category and monitor real-time spending progress.
-* **Statistical Anomaly Detection:** Identify spending outliers using Z-score calculation per category.
-* **Spending Intelligence Reports:** Generate quick statistical summaries and export printable report logs.
-* **Customizable Settings & Evaluation Lab:** Configure themes, currency, default categories, and run verification routines.
-* **User Authentication & Profile:** Secure client-side authentication with session and profile management.
+### 4. Running the Application
+Start the unified backend server and frontend static server:
+```bash
+npm start
+```
+*(Or for development: `npm run dev`)*
 
----
+The server will initialize:
+```text
+====================================================
+🛡️  ExpenseGuard Server (CE-2) running on port 5000
+🌐 Frontend: http://localhost:5000
+🩺 Health:   http://localhost:5000/api/health
+💳 APIs:     http://localhost:5000/api/transactions
+====================================================
+```
 
-## ✨ Features & Pages
-
-### 1. 🏠 Welcome & Authentication 
-*(welcome.html, signup.html, signin.html)*
-* Clean onboarding with visual finance cards.
-* Registration with validation (password length, confirmation check, duplicate email prevention).
-* Sign-in session state persisted in `localStorage`.
-* Protected routing guarding dashboard and sub-pages against unauthorized access.
-
-### 2. 📊 Dashboard 
-*(dashboard.html)*
-* Total spending summary, total transaction count, detected anomalies count, and average expense metrics.
-* Manual transaction creation form with input validation.
-* CSV drag-and-drop / file upload import for bulk transaction ingestion.
-* Dynamic category progress bars and spending distribution.
-* Live anomaly alerts list and recent transaction table.
-
-### 3. 💳 Transactions Management 
-*(transactions.html)*
-* Interactive transaction data table sorted newest-first.
-* Real-time search across descriptions and categories.
-* Category filter and anomaly status filter (All, Normal, Anomaly).
-* Detail view modal displaying transaction attributes and Z-score metrics.
-* Modal form for creating new transactions.
-
-### 4. ⚠️ Anomaly Center & Risk Monitor 
-*(anomalies.html)*
-* Portfolio risk gauge and risk percentage status.
-* Filter anomalies by risk level (All, High, Medium).
-* Sort by amount, Z-score intensity, or date.
-* Detailed explanation cards indicating why each expense was flagged.
-* Interactive demo anomaly generator.
-
-### 5. ▣ Smart Category Analysis 
-*(categories.html)*
-* Summary statistics: Total spending, top category, categories used, average per category.
-* Interactive category search and sort (Highest spending, Most transactions, A-Z).
-* Dynamic conic-gradient donut chart visualization with color-coded legend.
-* Category spending cards with progress bars and highest expense highlights.
-* Automated spending insight bullet points.
-
-### 6. ◫ Budget Limits & Health 
-*(budgets.html)*
-* Create category-specific monthly spending limits.
-* Real-time progress bars comparing actual spending with defined limits.
-* Visual alerts for nearing limit (>=80%) and over-budget (>=100%) states.
-* Easy budget removal with one-click action.
-
-### 7. ▤ Spending Intelligence Reports 
-*(reports.html)*
-* Key metric cards: Total Spending, Average Expense, Top Category, High Value Expense.
-* Category performance distribution.
-* Top 5 largest recorded transactions.
-* Monthly spending chronological summaries.
-* One-click report text export (`.txt`).
-
-### 8. 👤 User Profile 
-*(profile.html)*
-* Live account summary and avatar initials display.
-* Editable user name and email synchronized across session and stored user list.
-
-### 9. ⚙️ Control Center & Settings 
-*(settings.html)*
-* Multi-panel settings: Account, Preferences, Notifications, Security & Data, Evaluation Lab.
-* Theme toggle: Premium Navy Dark mode and Light mode.
-* Transaction CSV export, demo data population, and storage clear utilities.
-* Interactive Evaluation Lab demonstrating core JS array methods (`map`, `filter`, `reduce`, `sort`).
+Open your browser to: **`http://localhost:5000`**
 
 ---
 
-## 🔍 Statistical Anomaly Detection Methodology
+## 🔑 Firebase Google Authentication Setup
 
-ExpenseGuard detects anomalous expenses within each category using the standard normal distribution Z-score metric:
+To enable real Google Sign-In with Firebase Authentication, perform the following steps in the [Firebase Console](https://console.firebase.google.com/):
+
+### Step 1: Create or Select a Project
+1. Open the Firebase Console and click **Add project**.
+2. Enter a project name (e.g., `ExpenseGuard-CE2`) and click **Continue**.
+
+### Step 2: Register a Web Application
+1. In your Firebase Project Overview, click the **Web** icon (`</>`) to add an app.
+2. Enter an App nickname (e.g., `ExpenseGuard Web`) and click **Register app**.
+3. Firebase will display your Web App configuration snippet:
+   ```javascript
+   const firebaseConfig = {
+     apiKey: "AIzaSy...",
+     authDomain: "expenseguard-ce2.firebaseapp.com",
+     projectId: "expenseguard-ce2",
+     storageBucket: "expenseguard-ce2.appspot.com",
+     messagingSenderId: "123456789",
+     appId: "1:123456789:web:abcdef"
+   };
+   ```
+4. Open [javascript/firebase-auth.js](file:///javascript/firebase-auth.js) and replace the placeholder object in `firebaseConfig` with your actual keys.
+
+### Step 3: Enable Google Sign-In Provider
+1. In the left sidebar, navigate to **Build** → **Authentication**.
+2. Click **Get Started** (if opening for the first time).
+3. Under the **Sign-in method** tab, click **Google**.
+4. Toggle **Enable**, select your project support email, and click **Save**.
+
+### Step 4: Configure Authorized Domains
+1. Under **Authentication** → **Settings** → **Authorized domains**, ensure the following domains are present:
+   - `localhost`
+   - `127.0.0.1`
+   - Your production host domain (e.g. `expenseguard.vercel.app` if deploying online).
+
+### Step 5: Generate Firebase Admin SDK Service Account (for Backend)
+1. In the Firebase Console, click the **Settings gear** ⚙️ next to Project Overview → **Project settings**.
+2. Navigate to the **Service accounts** tab.
+3. Select **Node.js** and click **Generate new private key**.
+4. Confirm by clicking **Generate key**. A `.json` credential file will be downloaded.
+5. Save this file as:
+   `server/config/serviceAccountKey.json`
+   *(This path is strictly ignored by `.gitignore` so your secrets are never committed to version control).*
+
+---
+
+## 🍃 MongoDB Atlas Database Setup
+
+### Step 1: Create a Free Shared Cluster
+1. Log in to [MongoDB Atlas](https://www.mongodb.com/atlas).
+2. Click **Build a Database** and select the **M0 Free** shared cluster.
+3. Choose your nearest cloud provider and region, then click **Create**.
+
+### Step 2: Create a Database User
+1. In the left sidebar under **Security**, click **Database Access**.
+2. Click **Add New Database User**.
+3. Set Authentication Method to **Password**.
+4. Create a username (e.g., `expenseguard_user`) and a secure password.
+5. Set Database User Privileges to **Read and write to any database**.
+6. Click **Add User**.
+
+### Step 3: Configure Network Access (IP Whitelist)
+1. In the left sidebar under **Security**, click **Network Access**.
+2. Click **Add IP Address**.
+3. Click **Allow Access from Anywhere** (`0.0.0.0/0`) or enter your current IP.
+4. Click **Confirm**.
+
+### Step 4: Get Connection String
+1. Under **Deployment**, click **Database**.
+2. Click **Connect** on your cluster.
+3. Choose **Drivers** (Node.js).
+4. Copy the connection string format:
+   ```text
+   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/expenseguard?retryWrites=true&w=majority
+   ```
+5. Paste this connection string into your `.env` file as `MONGODB_URI`, replacing `<username>` and `<password>` with your database user credentials.
+
+---
+
+## 📡 REST API Reference
+
+All protected endpoints require the Firebase ID token in the `Authorization` header:
+`Authorization: Bearer <FIREBASE_ID_TOKEN>`
+
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/api/health` | Service health, MongoDB state, Firebase status | No |
+| `GET` | `/api/transactions` | List all transactions for authenticated user | **Yes** |
+| `POST` | `/api/transactions` | Create a new transaction | **Yes** |
+| `PUT` | `/api/transactions/:id` | Update an owned transaction | **Yes** |
+| `DELETE` | `/api/transactions/:id` | Delete an owned transaction | **Yes** |
+| `POST` | `/api/transactions/batch` | Bulk migrate/import transactions | **Yes** |
+| `GET` | `/api/transactions/stream` | Real-time SSE transaction event stream | **Yes** |
+
+### Example Request (Create Transaction)
+```bash
+curl -X POST http://localhost:5000/api/transactions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <YOUR_FIREBASE_ID_TOKEN>" \
+  -d '{
+    "date": "2026-10-22",
+    "category": "Food",
+    "description": "Team lunch at cafe",
+    "amount": 750,
+    "isRecurring": false,
+    "paymentMethod": "UPI"
+  }'
+```
+
+### Response Format
+```json
+{
+  "success": true,
+  "message": "Transaction created successfully",
+  "data": {
+    "id": "6717a66b9f1d2e3b4c5d6e7f",
+    "date": "2026-10-22",
+    "category": "Food",
+    "description": "Team lunch at cafe",
+    "amount": 750,
+    "isRecurring": false,
+    "paymentMethod": "UPI",
+    "tags": [],
+    "anomalyMetadata": {
+      "zScore": 0,
+      "patternRatio": 1,
+      "riskLevel": "Normal",
+      "isAnomaly": false
+    },
+    "createdAt": "2026-10-22T12:00:00.000Z",
+    "updatedAt": "2026-10-22T12:00:00.000Z"
+  }
+}
+```
+
+---
+
+## ⚡ Real-Time Synchronization (Server-Sent Events)
+
+ExpenseGuard includes real-time cross-tab and cross-device synchronization:
+- Connects automatically via `GET /api/transactions/stream?token=<ID_TOKEN>`.
+- Client registrations are strictly mapped to `req.user.uid`.
+- When an expense is created, updated, or deleted, a JSON event is pushed **only** to the active sessions of that specific user.
+- The frontend dynamically triggers dashboard re-calculations, anomaly risk reassessment, and category donut chart refreshes with zero manual page reload.
+- Auto-reconnect and heartbeat keep-alive packets prevent connection drops through HTTP proxies.
+
+---
+
+## 🔍 Statistical Anomaly Detection Engine
+
+ExpenseGuard preserves the CE-1 statistical anomaly detection model, now evaluated directly against database-backed transactions:
 
 $$Z = \frac{X - \mu}{\sigma}$$
 
 Where:
-* $X$: Transaction amount
-* $\mu$: Mean (average) spending for transactions in that specific category: $$\mu = \frac{\sum_{i=1}^{N}X_i}{N}$$
-* $\sigma$: Standard deviation of spending in that category: $$\sigma = \sqrt{\frac{\sum_{i=1}^{N}(X_i - \mu)^2}{N}}$$
+- $X$: Transaction amount
+- $\mu$: Category mean spending: $\mu = \frac{\sum_{i=1}^{N}X_i}{N}$
+- $\sigma$: Category standard deviation: $\sigma = \sqrt{\frac{\sum_{i=1}^{N}(X_i - \mu)^2}{N}}$
 
-**Classification Criteria:**
-* **Normal:** $\vert{}Z\vert{} < 1.8$ (Within expected statistical distribution)
-* **Medium Risk:** $1.8 \le \vert{}Z\vert{} < 2.6$ or single-item fallback ratio $\ge 1.6 \times$ global mean.
-* **High Risk:** $\vert{}Z\vert{} \ge 2.6$ or amount $\ge 3 \times$ category mean.
+### Classification Criteria:
+- **Normal:** $|Z| < 1.8$ (Expected distribution)
+- **Medium Risk (Potential Anomaly):** $1.8 \le |Z| < 2.6$ or single-item fallback ratio $\ge 1.6 \times \text{mean}$
+- **High Risk (Potential Anomaly):** $|Z| \ge 2.6$ or amount $\ge 3 \times \text{category mean}$
+
+Flagged transactions display transparent explanations explaining why the expense diverges from typical category behavior.
 
 ---
 
-## 📂 Project Structure
+## 🧪 Automated Testing
+
+ExpenseGuard includes a comprehensive test suite written using Node's native test runner (`node:test`, `node:assert/strict`) and `supertest`.
+
+To execute all tests:
+```bash
+npm test
+```
+
+### Verified Test Cases (21/21 Passing):
+1. **Health Check:** `GET /api/health` returns status 200 with runtime and database status.
+2. **Missing Token:** Protected routes return 401 when Authorization header is absent.
+3. **Malformed Token:** Requests with invalid Bearer formatting return 401.
+4. **Invalid Token:** Forged or expired Firebase tokens return 401.
+5. **Stream Security:** SSE stream endpoint rejects unauthenticated connections with 401.
+6. **Transaction Creation:** Valid payloads create records in MongoDB with verified UID ownership.
+7. **Anti-Tampering:** Client-supplied `firebaseUid` in the request body is discarded; authoritative UID is enforced from the token.
+8. **Amount Validation:** Rejects strings, zero, negative numbers, and non-numeric values (400).
+9. **Date Validation:** Enforces strict YYYY-MM-DD calendar dates (400).
+10. **Description Validation:** Rejects empty descriptions or strings exceeding 200 characters (400).
+11. **Category Normalization:** Maps categories case-insensitively and falls back to "Other" for unlisted categories.
+12. **User Data Isolation (Listing):** `GET /api/transactions` returns only the authenticated user's records.
+13. **Transaction Update:** `PUT /api/transactions/:id` updates allowed fields and persists changes to MongoDB.
+14. **Invalid ObjectId:** Malformed MongoDB IDs return 400 Bad Request.
+15. **Update Non-Existent:** Returns 404 for records that do not exist.
+16. **Cross-Tenant Security (Update):** User B attempting to update User A's transaction receives 404 and record is unmodified.
+17. **Cross-Tenant Security (Delete):** User B attempting to delete User A's transaction receives 404 and record is preserved.
+18. **Transaction Deletion:** `DELETE /api/transactions/:id` removes owned record from database (200).
+19. **Delete Non-Existent:** Returns 404 when deleting already-deleted or non-existent record.
+20. **Batch Migration:** `POST /api/transactions/batch` imports multiple transactions scoped to the user UID.
+21. **Batch Validation:** Rejects non-array batch payloads with 400.
+
+---
+
+## 📁 Project Structure
 
 ```text
-recurring-expense-anomaly-detector-main/
+ExpenseGuard-recurring-expense-anomaly-detector-main/
 │
-├── css/
-│   ├── anomalies.css        # Anomaly Center and risk gauge styles
-│   ├── auth.css             # Authentication (sign-in, sign-up) styling
-│   ├── categories.css       # Smart category tiles and donut chart styles
-│   ├── evaluation.css       # Premium Navy dark design system & tokens
-│   ├── style.css            # Base layouts, sidebar, headers, tables
-│   ├── transaction.css      # Transaction page layout overrides
-│   ├── transactions.css     # Transaction table, filters, and modal styling
-│   └── welcome.css          # Onboarding / welcome page visual cards
+├── server/                              # CE-2 Express Backend
+│   ├── server.js                        # Express server entry point & middleware setup
+│   ├── middleware/
+│   │   └── verifyFirebaseToken.js       # Firebase Admin SDK ID token verification
+│   ├── models/
+│   │   └── Transaction.js               # Mongoose transaction schema & compound indexes
+│   ├── routes/
+│   │   └── transactions.js              # Secure CRUD, batch import, and SSE stream routes
+│   └── utils/
+│       └── realtime.js                  # SSE connection manager scoped by UID
 │
-├── data/
-│   └── sample-transactions.csv # Sample dataset with realistic expenses and anomalies
+├── tests/
+│   └── api.test.js                      # 21 automated integration tests (Supertest + node:test)
 │
-├── javascript/
-│   ├── anomalies.js         # Anomaly Center filtering and risk calculation
-│   ├── app.js               # Core application logic, auth, storage, dashboard, CSV import
-│   ├── budgets.js           # Budget creation, progress calculation, and health
-│   ├── categories.js        # Category aggregation, donut chart, and insights
-│   ├── profile.js           # Profile editing and summary statistics
-│   ├── reports.js           # Financial report generation and export
-│   ├── settings.js          # Control center, theme switcher, demo loader, eval lab
-│   └── transaction.js       # Transaction table filters, modal, and view details
+├── javascript/                          # Frontend Logic
+│   ├── firebase-auth.js                 # Firebase Modular SDK Google Auth helper
+│   ├── api.js                           # API client with token injection & SSE subscription
+│   ├── app.js                           # Core app logic, async DB loading, profile, CSV import
+│   ├── transaction.js                   # Transaction management, async CRUD modal actions
+│   ├── anomalies.js                     # Anomaly detector with database-backed calculations
+│   ├── budgets.js                       # Budget limit tracking against database transactions
+│   ├── categories.js                    # Category summaries and donut chart visualization
+│   ├── settings.js                      # Settings panel, preferences, evaluation lab
+│   └── reports.js                       # Financial reports and text export
 │
-├── pages/
-│   ├── anomalies.html       # Anomaly Center page
-│   ├── budgets.html         # Budgets management page
-│   ├── categories.html      # Category breakdown page
-│   ├── profile.html         # User profile page
-│   ├── reports.html         # Financial reports page
-│   ├── settings.html        # Settings and Evaluation Lab page
-│   ├── signin.html          # Sign In page
-│   ├── signup.html          # Sign Up / Create Account page
-│   ├── transactions.html    # Transactions management page
-│   └── welcome.html         # Welcome / Landing page
+├── pages/                               # Application Views
+│   ├── welcome.html                     # Landing page
+│   ├── signin.html                      # Sign In page (Google Auth button integrated)
+│   ├── signup.html                      # Sign Up page (Google Auth button integrated)
+│   ├── transactions.html                # Transactions data table & filter page
+│   ├── anomalies.html                   # Anomaly center & risk monitor
+│   ├── categories.html                  # Smart category analysis
+│   ├── budgets.html                     # Monthly budget limits
+│   ├── reports.html                     # Spending intelligence reports
+│   ├── profile.html                     # User profile & database statistics
+│   └── settings.html                    # Settings & Evaluation Lab
 │
-├── dashboard.html           # Main ExpenseGuard dashboard
-├── index.html               # Entry point redirecting to welcome page
-└── README.md                # Project documentation
+├── css/                                 # Styling (Preserved Dark Navy Theme)
+│   ├── auth.css                         # Auth styling (Google button, divider, notices)
+│   ├── evaluation.css                   # Core tokens, color palette, typography
+│   └── style.css                        # Base layouts, navigation, and cards
+│
+├── dashboard.html                       # Main dashboard with one-click migration banner
+├── index.html                           # Entry redirect
+├── .env.example                         # Environment variables template
+├── package.json                         # Node.js dependencies & test scripts
+└── README.md                            # Comprehensive documentation
 ```
+
+---
+
+## 🔒 Security Best Practices Implemented
+
+1. **Never Trust Client Identifiers:** The backend derives the owner UID solely from the cryptographically verified Firebase ID token via `admin.auth().verifyIdToken()`. Any `firebaseUid` or `userId` in the request body is ignored.
+2. **Strict Query Scoping:** Every database query (`find`, `findOneAndUpdate`, `findOneAndDelete`) enforces `{ _id: id, firebaseUid: req.user.uid }`.
+3. **No Mass Assignment:** Only approved fields (`amount`, `category`, `description`, `date`, `isRecurring`, `paymentMethod`, `tags`) can be created or updated.
+4. **Input Sanitization & Validation:** Numbers are checked for finite positive values, dates conform to calendar format, and strings are length-limited.
+5. **No Credentials in Source Control:** `.env` and `serviceAccountKey*.json` are excluded via `.gitignore`. Placeholders are clearly marked.
+6. **Graceful Offline Fallback:** If cloud credentials are not yet configured, the system provides helpful UI banners and local database fallbacks without crashing.

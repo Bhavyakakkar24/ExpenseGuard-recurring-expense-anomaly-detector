@@ -143,21 +143,26 @@
   // RENDER TRANSACTIONS
   // ========================================================
 
-  function renderTransactions() {
+  async function renderTransactions() {
     const tableBody = document.getElementById("transactionTable");
 
     if (!tableBody) {
       console.error("ERROR: #transactionTable not found.");
-
       return;
     }
 
-    const transactions = getTransactions();
-
-    console.log("Transactions loaded:", transactions);
+    let transactions = [];
+    if (typeof window.fetchTransactions === "function") {
+      try {
+        transactions = await window.fetchTransactions();
+      } catch (e) {
+        transactions = getTransactions();
+      }
+    } else {
+      transactions = getTransactions();
+    }
 
     // Clear table
-
     tableBody.innerHTML = "";
 
     // -----------------------------------------------
@@ -336,7 +341,7 @@
   // DELETE TRANSACTION
   // ========================================================
 
-  function deleteTransaction(transactionId) {
+  async function deleteTransaction(transactionId) {
     if (transactionId == null) {
       return;
     }
@@ -352,24 +357,30 @@
       }
     }
 
-    const transactions = getTransactions();
+    if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.deleteTransaction === "function") {
+      try {
+        await window.ExpenseGuardAPI.deleteTransaction(transactionId);
+      } catch (err) {
+        console.warn("API deleteTransaction error:", err.message);
+      }
+    }
 
-    const updatedTransactions = transactions.filter(function (transaction) {
-      return String(transaction.id) !== String(transactionId);
-    });
-
-    const saved = saveTransactions(updatedTransactions);
-
-    if (!saved) {
-      alert("Transaction could not be deleted.");
-      return;
+    if (typeof window.fetchTransactions === "function") {
+      await window.fetchTransactions(true);
+    } else {
+      const transactions = getTransactions();
+      const updatedTransactions = transactions.filter(function (transaction) {
+        return String(transaction.id) !== String(transactionId);
+      });
+      saveTransactions(updatedTransactions);
     }
 
     // Close detail modal if open
     closeDetailModal();
 
     // Re-render table immediately
-    renderTransactions();
+    await renderTransactions();
+    if (typeof window.toast === "function") window.toast("Transaction deleted");
   }
 
   window.deleteTransaction = deleteTransaction;
@@ -571,12 +582,12 @@
     modal.classList.remove("show");
   }
 
-  // ========================================================
-  // ADD TRANSACTION
-  // ========================================================
+  let isModalSubmitting = false;
 
-  function addTransaction(event) {
-    event.preventDefault();
+  async function addTransaction(event) {
+    if (event) event.preventDefault();
+
+    if (isModalSubmitting) return;
 
     console.log("Transaction form submitted.");
 
@@ -585,27 +596,20 @@
     // -----------------------------------------------
 
     const dateInput = document.getElementById("modalTransactionDate");
-
     const categoryInput = document.getElementById("modalTransactionCategory");
-
     const descriptionInput = document.getElementById(
       "modalTransactionDescription",
     );
-
     const amountInput = document.getElementById("modalTransactionAmount");
 
     if (!dateInput || !categoryInput || !descriptionInput || !amountInput) {
       console.error("One or more transaction form fields are missing.");
-
       return;
     }
 
     const date = dateInput.value;
-
     const category = categoryInput.value;
-
     const description = descriptionInput.value.trim();
-
     const amount = Number(amountInput.value);
 
     // -----------------------------------------------
@@ -614,95 +618,74 @@
 
     if (!date) {
       alert("Please select a date.");
-
       return;
     }
 
     if (!category) {
       alert("Please select a category.");
-
       return;
     }
 
     if (!description) {
       alert("Please enter a description.");
-
       return;
     }
 
     if (!Number.isFinite(amount) || amount <= 0) {
       alert("Please enter a valid amount.");
-
       return;
     }
 
-    // -----------------------------------------------
-    // Get existing transactions
-    // -----------------------------------------------
+    const submitBtn =
+      event?.target?.querySelector('button[type="submit"]') ||
+      document.querySelector('#transactionModalForm button[type="submit"]');
 
-    const transactions = getTransactions();
-
-    // -----------------------------------------------
-    // Create transaction
-    // -----------------------------------------------
-
-    const transaction = {
-      id: Date.now(),
-
-      date: date,
-
-      category: category,
-
-      description: description,
-
-      amount: amount,
-    };
-
-    // -----------------------------------------------
-    // Add
-    // -----------------------------------------------
-
-    transactions.push(transaction);
-
-    // -----------------------------------------------
-    // Save
-    // -----------------------------------------------
-
-    const saved = saveTransactions(transactions);
-
-    if (!saved) {
-      alert("Transaction could not be saved.");
-
-      return;
+    isModalSubmitting = true;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
     }
 
-    console.log("Transaction saved:", transaction);
+    try {
+      if (window.ExpenseGuardAPI && typeof window.ExpenseGuardAPI.createTransaction === "function") {
+        await window.ExpenseGuardAPI.createTransaction({
+          date: date,
+          category: category,
+          description: description,
+          amount: amount,
+        });
+        if (typeof window.fetchTransactions === "function") {
+          await window.fetchTransactions(true);
+        }
+      } else {
+        const transactions = getTransactions();
+        transactions.unshift({
+          id: Date.now(),
+          date: date,
+          category: category,
+          description: description,
+          amount: amount,
+        });
+        saveTransactions(transactions);
+      }
 
-    console.log("All transactions:", getTransactions());
+      const form = document.getElementById("transactionModalForm");
+      if (form) {
+        form.reset();
+      }
 
-    // -----------------------------------------------
-    // Reset form
-    // -----------------------------------------------
-
-    const form = document.getElementById("transactionModalForm");
-
-    if (form) {
-      form.reset();
+      closeAddTransaction();
+      await renderTransactions();
+      if (typeof window.toast === "function") window.toast("Transaction added to database!");
+    } catch (err) {
+      alert("Error saving transaction: " + (err.message || "Network error"));
+    } finally {
+      isModalSubmitting = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Add Transaction";
+      }
     }
-
-    // -----------------------------------------------
-    // Close modal
-    // -----------------------------------------------
-
-    closeAddTransaction();
-
-    // -----------------------------------------------
-    // Refresh table
-    // -----------------------------------------------
-
-    renderTransactions();
-
-    alert("Transaction added successfully!");
   }
 
   // ========================================================
@@ -1033,12 +1016,16 @@
     });
   }
 
+  window.renderTransactions = renderTransactions;
+
   // ========================================================
   // START AFTER HTML LOADS
   // ========================================================
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initializeTransactionsPage);
+    document.addEventListener("DOMContentLoaded", () => {
+      initializeTransactionsPage();
+    });
   } else {
     initializeTransactionsPage();
   }

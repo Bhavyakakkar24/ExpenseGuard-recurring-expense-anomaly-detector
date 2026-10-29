@@ -122,7 +122,12 @@
               <h2>⚠ Detected anomalies</h2>
               <p>Filter the transactions that need your attention.</p>
             </div>
+          <!-- Live Feedback Notification Banner -->
+          <div id="anomalyAlert" class="anomaly-alert" style="display: none;" role="alert">
+            <span id="anomalyAlertMsg"></span>
+            <button type="button" id="anomalyAlertClose" class="alert-close" aria-label="Dismiss">&times;</button>
           </div>
+
           <div class="anomaly-controls">
             <input
               id="anomalySearch"
@@ -131,11 +136,20 @@
             <button class="filter-btn active" data-risk="all">All</button>
             <button class="filter-btn" data-risk="high">High</button>
             <button class="filter-btn" data-risk="medium">Medium</button>
+            <select id="anomalyStatusFilter" title="Filter by review status">
+              <option value="all">All Status</option>
+              <option value="new">New</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="dismissed">Dismissed</option>
+            </select>
             <select id="anomalySort">
               <option value="amount">Highest amount</option>
               <option value="zscore">Highest z-score</option>
               <option value="recent">Most recent</option>
             </select>
+            <button type="button" class="sync-anomalies-btn" id="syncAnomaliesBtn" title="Run detection and synchronize anomalies to MongoDB Atlas">
+              ⚡ Detect &amp; Sync
+            </button>
             <button class="demo-btn" id="demoAnomaly">
               ＋ Add demo alert
             </button>
@@ -188,6 +202,8 @@
         </section>
       </main>
     </div>
+    <script type="module" src="../javascript/firebase-auth.js"></script>
+    <script src="../javascript/api.js"></script>
     <script src="../javascript/app.js"></script>
     <script src="../javascript/anomalies.js"></script>
   </body>
