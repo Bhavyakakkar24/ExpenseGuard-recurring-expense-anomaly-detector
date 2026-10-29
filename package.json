@@ -1,8 +1,7 @@
-﻿{
+{
   "name": "expenseguard-ce2",
   "version": "2.0.0",
-  "private": true,
-  "description": "ExpenseGuard CE-2 backend and tests",
+  "description": "ExpenseGuard - Recurring Expense Anomaly Detector (Continuous Evaluation 2)",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
@@ -14,7 +13,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "firebase-admin": "^12.2.0",
-    "mongoose": "^8.5.1"
+    "mongoose": "^8.24.6"
   },
   "devDependencies": {
     "supertest": "^7.0.0"
@@ -22,5 +21,6 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "author": "ExpenseGuard Team",
   "license": "MIT"
 }
