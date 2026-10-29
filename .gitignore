@@ -1,0 +1,12 @@
+﻿node_modules/
+**/node_modules/
+
+.env
+.env.*
+!.env.example
+
+serviceAccountKey.json
+**/serviceAccountKey.json
+
+ce2-transfer-backup/
+stash-files.txt
